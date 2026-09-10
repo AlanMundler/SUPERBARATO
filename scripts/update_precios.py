@@ -566,10 +566,13 @@ VTEX_FALLBACK_BASES = {
     "disco": "https://www.disco.com.ar/api/catalog_system/pub/products/search",
     "jumbo": "https://www.jumbo.com.ar/api/catalog_system/pub/products/search",
     "carrefour": "https://www.carrefour.com.ar/api/catalog_system/pub/products/search",
+    # MAS = ChangoMas (ex Walmart/GDN), VTEX completa, entrega en capital
+    "mas": "https://www.masonline.com.ar/api/catalog_system/pub/products/search",
 }
 VTEX_FALLBACK_NOMBRES = {
     "vea": "Vea", "disco": "Disco", "jumbo": "Jumbo",
     "carrefour": "Carrefour Online",
+    "mas": "ChangoMas",
 }
 ZONA_ONLINE_CBA = "Online (entrega en Córdoba Capital)"
 
@@ -841,6 +844,68 @@ def correr_pdf(meta_supers, hoy):
     return resumen
 
 
+# ---------------------------------------------------------------- Google Sheet (LA DISTRI)
+SHEET_DISTRI = (
+    "https://docs.google.com/spreadsheets/d/"
+    "12k4LmArYwr-Suclb0pY1E1z5A5uzlGJO/export?format=csv&gid=1291461654"
+)
+
+def correr_sheet():
+    """Extrae lista de precios de LA DISTRI (mayorista Córdoba Capital).
+    Columnas: COD | CATEGORÍA | PRODUCTOS | PRECIO ESPECIAL CON DESCUENTO | PRECIO LISTA | ..."""
+    print("[sheet] descargando LA DISTRI", flush=True)
+    try:
+        raw = fetch(SHEET_DISTRI, VTEX_HEADERS, timeout=30).decode("utf-8", errors="replace")
+    except Exception as e:
+        raise RuntimeError(f"descarga sheet: {e}")
+    rows = list(csv.reader(io.StringIO(raw)))
+    if len(rows) < 3:
+        raise RuntimeError("sheet vacio")
+    header = rows[2]  # fila 3 = COD CATEGORÍA PRODUCTOS PRECIO ESPECIAL CON DESCUENTO PRECIO LISTA
+    i_cod, i_cat, i_prod, i_esp, i_lista = 0, 1, 2, 3, 4
+    hoy = (datetime.utcnow() - timedelta(hours=3)).date().isoformat()
+    pares = []
+    for r in rows[3:]:
+        if len(r) <= max(i_cod, i_cat, i_prod, i_esp, i_lista):
+            continue
+        prod = (r[i_prod] or "").strip()
+        if not prod or len(prod) < 4:
+            continue
+        cat = (r[i_cat] or "").strip()
+        try:
+            esp = int((r[i_esp] or "").replace("$", "").replace(".", "").replace(",", "").strip())
+            lis = int((r[i_lista] or "").replace("$", "").replace(".", "").replace(",", "").strip())
+        except ValueError:
+            continue
+        if esp <= 0 or lis <= 0:
+            continue
+        precio = esp if esp < lis else lis
+        promo = esp < lis
+        pares.append({
+            "ean": "SHT-" + re.sub(r"[^A-Z0-9]+", "-", norm(prod))[:45],
+            "producto": prod[:90], "marca": "LA DISTRI",
+            "categoria": cat.lower()[:30] or "almacen",
+            "precio": precio, "precio_lista": lis, "precio_min": precio,
+            "promo": promo,
+            "leyenda": "Precio especial mayorista" if promo else "Precio lista mayorista",
+            "suc": 1, "unidad": "", "fuente": "sheet",
+        })
+    print(f"  [sheet] LA DISTRI: {len(pares)} pares", flush=True)
+    if len(pares) < 10:
+        raise RuntimeError(f"solo {len(pares)} pares")
+    vistos = {}
+    for o in pares:
+        k = (norm(o["producto"]), o["precio"])
+        if k not in vistos:
+            vistos[k] = o
+    items = sorted(vistos.values(), key=lambda o: o["precio"])
+    escribir_super("la-distri", "La Distri", items, "sheet", hoy, "parcial (mayorista)",
+                   zona="Córdoba Capital", filtro="mayorista: lista Google Sheet semanal")
+    return [{"id": "la-distri", "nombre": "La Distri", "items": len(items),
+             "sucursales": 0, "cobertura": "parcial (mayorista)",
+             "fuente": "sheet", "stale": False}]
+
+
 # ---------------------------------------------------------------- main
 def escribir_super(sid, nombre, items, fuente, fecha, cobertura, sucursales=0,
                    zona="Córdoba Capital", filtro=None):
@@ -900,12 +965,15 @@ def main():
                             "sucursales": 0, "cobertura": "completa",
                             "fuente": "vtex", "stale": True})
 
-    if solo in (None, "vtex", "fallback"):
+    if solo in (None, "vtex", "fallback", "mas"):
         # Tiendas online que entregan en Córdoba: solo si SEPA no trajo la
         # bandera en esta corrida (SEPA = precio de sucursal, manda).
         for sid, base in VTEX_FALLBACK_BASES.items():
             if sid in sepa_ids:
                 print(f"[{sid}] cubierto por SEPA, se omite fallback", flush=True)
+                continue
+            # Si --solo mas, solo procesamos mas
+            if solo == "mas" and sid != "mas":
                 continue
             nombre = VTEX_FALLBACK_NOMBRES[sid]
             try:
@@ -930,6 +998,12 @@ def main():
             resumen += correr_pdf(meta_supers, hoy)
         except Exception as e:
             print(f"[pdf] FALLO GENERAL: {e}", flush=True)
+
+    if solo in (None, "sheet"):
+        try:
+            resumen += correr_sheet()
+        except Exception as e:
+            print(f"[sheet] FALLO GENERAL: {e}", flush=True)
 
     if solo in (None, "scrape"):
         for sid in ("mariano-max", "makro", "tadicor", "almacor", "diarco"):

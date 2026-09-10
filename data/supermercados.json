@@ -183,5 +183,25 @@
     "web": "https://superbuenosdias.ar",
     "sucursales_cordoba": ["Sarmiento 2050", "Bv. San Juan 560", "Av. Vélez Sarsfield 6551"],
     "notas": "Cadena cordobesa (~29 locales): se extrae su catálogo semanal catalogo.pdf con OCR."
+  },
+  {
+    "id": "mas",
+    "nombre": "ChangoMas",
+    "color": "#007bff",
+    "tipo": "nacional con sucursales en capital",
+    "fuente": "vtex",
+    "web": "https://www.masonline.com.ar",
+    "sucursales_cordoba": ["Córdoba Capital (ver sucursales en masonline.com.ar)"],
+    "notas": "Ex Walmart/GDN Argentina. VTEX completa. Precios de tienda online con entrega en capital."
+  },
+  {
+    "id": "la-distri",
+    "nombre": "La Distri",
+    "color": "#8b4513",
+    "tipo": "cordobes",
+    "fuente": "sheet",
+    "web": "https://www.instagram.com/ladistri_cba",
+    "sucursales_cordoba": ["Av. Duarte Quirós 2300, esquina Pedro Goyena"],
+    "notas": "Mayorista cordobés. Lista de precios semanal en Google Sheet (precio especial + lista)."
   }
 ]
