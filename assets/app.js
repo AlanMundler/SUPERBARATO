@@ -45,11 +45,7 @@ function grupos() {
     map.get(key).items.push(o);
   }
   for (const g of map.values()) g.items.sort((a, b) => a.precio - b.precio);
-  return [...map.values()].sort((a, b) => descuentoMax(b) - descuentoMax(a));
-}
-
-function descuentoMax(g) {
-  return Math.max(...g.items.map((o) => (o.precio_lista > o.precio ? (o.precio_lista - o.precio) / o.precio_lista : 0)));
+  return [...map.values()].sort((a, b) => a.items[0].precio - b.items[0].precio);
 }
 
 function renderMeta() {
@@ -82,19 +78,16 @@ function renderOfertas() {
   for (const g of gs) {
     const mejor = g.items[0];
     const s = superById(mejor.super);
-    const dto = mejor.precio_lista > mejor.precio
-      ? Math.round((mejor.precio_lista - mejor.precio) / mejor.precio_lista * 100) : 0;
     const div = document.createElement("div");
     div.className = "oferta";
     div.innerHTML = `
       <div>
         <span class="badge" style="background:${s.color}">${s.nombre}</span>
         <strong>${g.producto}</strong> <span class="muted">${g.marca} · ${g.items.length} precios</span><br/>
-        <span class="ahorro">${dto ? `−${dto}% · ` : ""}Mejor: ${s.nombre}</span>
+        <span class="muted">Mejor: ${s.nombre}</span>
       </div>
       <div style="text-align:right">
         <span class="precio">${fmt(mejor.precio)}</span>
-        ${mejor.precio_lista > mejor.precio ? `<span class="tachado">${fmt(mejor.precio_lista)}</span>` : ""}
         <br/><button class="btn-add" data-add="${mejor.id}">➕ agregar</button>
       </div>`;
     div.onclick = (e) => {
