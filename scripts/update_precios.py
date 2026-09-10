@@ -56,17 +56,21 @@ SEPA_RESOURCES = {
     6: ("b3c3da5d-213d-41e7-8d74-f23fda0a3c30", "sepa_sabado.zip"),
 }
 CHROME_HEADERS = {
+    # Set completo verificado (2026-09-10): sin Accept-Encoding gzip ni
+    # Referer, CloudFront/WAF responde 403 al ZIP SEPA.
     "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                    "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"),
     "Accept": ("text/html,application/xhtml+xml,application/xml;q=0.9,"
-               "image/avif,image/webp,*/*;q=0.8"),
+               "image/avif,image/webp,image/apng,*/*;q=0.8"),
     "Accept-Language": "es-AR,es;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Accept-Encoding": "identity",
+    "Referer": "https://datos.produccion.gob.ar/",
     "Sec-Ch-Ua": '"Chromium";v="130", "Google Chrome";v="130", "Not?A_Brand";v="99"',
     "Sec-Ch-Ua-Mobile": "?0",
     "Sec-Ch-Ua-Platform": '"Windows"',
     "Sec-Fetch-Dest": "document",
     "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-Site": "same-origin",
     "Upgrade-Insecure-Requests": "1",
 }
 VTEX_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) SUPERBARATO-bot"}
@@ -470,6 +474,83 @@ def vtex_full(api_base, max_paginas=600):
     return sorted(por_ean.values(), key=lambda o: o["precio"])
 
 
+def vtex_arbol(api_base):
+    """Lista de rutas de categoría ['Carnes', 'Carnes/Vacuna', ...] del árbol VTEX."""
+    host = api_base.split("/api/")[0]
+    raw = fetch(f"{host}/api/catalog_system/pub/category/tree/3",
+                VTEX_HEADERS, timeout=30)
+    tree = json.loads(raw.decode("utf-8", errors="replace"))
+    rutas = []
+
+    def caminar(nodos, pref):
+        for n in nodos:
+            ruta = pref + [n.get("name", "")]
+            rutas.append("/".join(ruta))
+            caminar(n.get("children") or [], ruta)
+
+    caminar(tree, [])
+    return [r for r in rutas if r]
+
+
+def vtex_full_categorias(api_base, max_cats=None, max_paginas=600):
+    """Catálogo completo recorriendo cada categoría (evita el tope de offset
+    del search plano). Si el árbol falla, usa el paginado plano."""
+    import urllib.parse
+    try:
+        rutas = vtex_arbol(api_base)
+        print(f"  [vtex] arbol: {len(rutas)} categorias", flush=True)
+    except Exception as e:
+        print(f"  [vtex] arbol fallo ({str(e)[:80]}), sin extras por categoria", flush=True)
+        return []
+    if max_cats:
+        rutas = rutas[:max_cats]
+    por_ean = {}
+    for ruta in rutas:
+        fq = "fq=" + urllib.parse.quote("C:/" + ruta + "/", safe="/:")
+        page = 0
+        while page < max_paginas:
+            a, b = page * 50, page * 50 + 49
+            try:
+                raw = fetch(f"{api_base}?{fq}&_from={a}&_to={b}",
+                            VTEX_HEADERS, timeout=30)
+                data = json.loads(raw.decode("utf-8", errors="replace"))
+            except Exception:
+                break
+            if not isinstance(data, list) or not data:
+                break
+            for p in data:
+                try:
+                    items = p.get("items") or []
+                    sellers = (items[0].get("sellers") or []) if items else []
+                    offer = (sellers[0].get("commertialOffer") or {}) if sellers else {}
+                    precio = offer.get("Price") or offer.get("price")
+                    if not precio:
+                        continue
+                    lista = offer.get("ListPrice") or offer.get("listPrice") or precio
+                    ean = ((items[0].get("ean") or "") if items else "") or p.get("productId", "")
+                    ean = str(ean).strip()
+                    if not ean:
+                        continue
+                    nombre = (p.get("productName") or "").strip()[:90]
+                    marca = (p.get("brand") or "").strip()[:40] or "Varias"
+                    if ean not in por_ean or precio < por_ean[ean]["precio"]:
+                        por_ean[ean] = {
+                            "ean": ean, "producto": nombre, "marca": marca,
+                            "categoria": categorizar(nombre, marca),
+                            "precio": int(precio), "precio_lista": int(lista or precio),
+                            "precio_min": int(precio),
+                            "promo": bool(lista and lista > precio),
+                            "leyenda": "", "suc": 1, "unidad": "", "fuente": "vtex"}
+                except (KeyError, IndexError, TypeError):
+                    continue
+            if len(data) < 50:
+                break
+            page += 1
+            time.sleep(0.2)
+        print(f"  [vtex] {ruta}: {len(por_ean)} únicos acumulados", flush=True)
+    return sorted(por_ean.values(), key=lambda o: o["precio"])
+
+
 # ---------------------------------------------------------------- scrape
 SCRAPE_URLS = {
     "mariano-max": ["https://www.marianomax.com.ar/ofertas"],
@@ -522,6 +603,7 @@ def main():
         return selftest()
     solo = args[args.index("--solo") + 1] if "--solo" in args else None
     max_pag = int(args[args.index("--max-paginas") + 1]) if "--max-paginas" in args else 600
+    max_cats = int(args[args.index("--max-cats") + 1]) if "--max-cats" in args else None
     hoy = (datetime.utcnow() - timedelta(hours=3)).date().isoformat()
 
     meta_supers = {}
@@ -540,7 +622,16 @@ def main():
     if solo in (None, "cordiez"):
         try:
             base = meta_supers.get("cordiez", {}).get("api_base", "")
-            items = vtex_full(base, max_paginas=max_pag) if base else []
+            plano = vtex_full(base, max_paginas=max_pag) if base else []
+            extra = (vtex_full_categorias(base, max_cats=max_cats, max_paginas=max_pag)
+                     if base else [])
+            unidos = {o["ean"]: o for o in plano}
+            for o in extra:
+                if o["ean"] not in unidos or o["precio"] < unidos[o["ean"]]["precio"]:
+                    unidos[o["ean"]] = o
+            items = sorted(unidos.values(), key=lambda o: o["precio"])
+            print(f"[cordiez] plano={len(plano)} extra_cat={len(extra)} "
+                  f"total={len(items)}", flush=True)
             if len(items) >= 50:
                 escribir_super("cordiez", "Cordiez", items, "vtex", hoy, "completa")
                 resumen.append({"id": "cordiez", "nombre": "Cordiez", "items": len(items),
