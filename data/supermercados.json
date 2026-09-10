@@ -3,56 +3,116 @@
     "id": "vea",
     "nombre": "Vea",
     "color": "#e30613",
-    "tipo": "nacional",
-    "fuente": "vtex",
-    "api_base": "https://www.vea.com.ar/api/catalog_system/pub/products/search",
+    "tipo": "nacional con sucursales en capital",
+    "fuente": "sepa",
+    "sepa": { "comercio": 9, "bandera": 1 },
     "web": "https://www.vea.com.ar",
-    "sucursales_cordoba": ["Av. Colón", "Gral. Paz", "Alta Córdoba", "Villa Allende"],
-    "notas": "Cencosud. Comparte catálogo base con Disco/Jumbo."
+    "sucursales_cordoba": ["Av. Colón", "Gral. Paz", "Alta Córdoba", "Cerro de las Rosas"],
+    "notas": "Cencosud. Precios SEPA filtrados a sucursales de Córdoba Capital únicamente."
   },
   {
     "id": "disco",
     "nombre": "Disco",
     "color": "#009444",
-    "tipo": "nacional",
-    "fuente": "vtex",
-    "api_base": "https://www.disco.com.ar/api/catalog_system/pub/products/search",
+    "tipo": "nacional con sucursales en capital",
+    "fuente": "sepa",
+    "sepa": { "comercio": 9, "bandera": 2 },
     "web": "https://www.disco.com.ar",
     "sucursales_cordoba": ["Nueva Córdoba", "Cerro de las Rosas", "Villa Belgrano"],
-    "notas": "Cencosud. Suele estar arriba en precio vs Vea."
+    "notas": "Cencosud. Precios SEPA filtrados a sucursales de Córdoba Capital únicamente."
   },
   {
     "id": "jumbo",
     "nombre": "Jumbo",
     "color": "#004b93",
-    "tipo": "nacional",
-    "fuente": "vtex",
-    "api_base": "https://www.jumbo.com.ar/api/catalog_system/pub/products/search",
+    "tipo": "nacional con sucursales en capital",
+    "fuente": "sepa",
+    "sepa": { "comercio": 9, "bandera": 3 },
     "web": "https://www.jumbo.com.ar",
-    "sucursales_cordoba": ["Córdoba Shopping", "Patio Olmos área"],
-    "notas": "Cencosud. Foco en frescos e importados."
+    "sucursales_cordoba": ["Córdoba Shopping"],
+    "notas": "Cencosud. Precios SEPA filtrados a sucursales de Córdoba Capital únicamente."
   },
   {
-    "id": "carrefour",
-    "nombre": "Carrefour",
+    "id": "carrefour-hiper",
+    "nombre": "Carrefour Hiper",
     "color": "#004e9e",
-    "tipo": "nacional",
-    "fuente": "vtex",
-    "api_base": "https://www.carrefour.com.ar/api/catalog_system/pub/products/search",
+    "tipo": "nacional con sucursales en capital",
+    "fuente": "sepa",
+    "sepa": { "comercio": 10, "bandera": 1 },
     "web": "https://www.carrefour.com.ar",
-    "sucursales_cordoba": ["Market Gral. Paz", "Express Nueva Córdoba", "Maxi Circunvalación"],
-    "notas": "Formatos Market/Express/Maxi. Maxi compite con mayoristas."
+    "sucursales_cordoba": ["Hipermercados en Córdoba Capital"],
+    "notas": "Precios SEPA filtrados a sucursales de Córdoba Capital únicamente."
+  },
+  {
+    "id": "carrefour-market",
+    "nombre": "Carrefour Market",
+    "color": "#0066c0",
+    "tipo": "nacional con sucursales en capital",
+    "fuente": "sepa",
+    "sepa": { "comercio": 10, "bandera": 2 },
+    "web": "https://www.carrefour.com.ar",
+    "sucursales_cordoba": ["Market Gral. Paz y otras en Córdoba Capital"],
+    "notas": "Precios SEPA filtrados a sucursales de Córdoba Capital únicamente."
+  },
+  {
+    "id": "carrefour-express",
+    "nombre": "Carrefour Express",
+    "color": "#0090da",
+    "tipo": "nacional con sucursales en capital",
+    "fuente": "sepa",
+    "sepa": { "comercio": 10, "bandera": 3 },
+    "web": "https://www.carrefour.com.ar",
+    "sucursales_cordoba": ["Express Nueva Córdoba y otras en Córdoba Capital"],
+    "notas": "Precios SEPA filtrados a sucursales de Córdoba Capital únicamente."
+  },
+  {
+    "id": "carrefour-maxi",
+    "nombre": "Carrefour Maxi",
+    "color": "#003a75",
+    "tipo": "nacional con sucursales en capital",
+    "fuente": "sepa",
+    "sepa": { "comercio": 10, "bandera": 4 },
+    "web": "https://www.carrefour.com.ar",
+    "sucursales_cordoba": ["Maxi Circunvalación"],
+    "notas": "Formato mayorista. Precios SEPA filtrados a Córdoba Capital únicamente."
   },
   {
     "id": "dia",
     "nombre": "Día",
-    "color": "#ff0000",
-    "tipo": "nacional",
-    "fuente": "vtex",
-    "api_base": "https://www.diaonline.com.ar/api/catalog_system/pub/products/search",
+    "color": "#ef6c00",
+    "tipo": "nacional con sucursales en capital",
+    "fuente": "sepa",
+    "sepa": { "comercio": 15, "bandera": 1 },
     "web": "https://www.diaonline.com.ar",
     "sucursales_cordoba": ["Centro", "Alberdi", "San Vicente"],
-    "notas": "Fuerte en marca propia y almacén."
+    "notas": "Precios SEPA filtrados a sucursales de Córdoba Capital únicamente."
+  },
+  {
+    "id": "la-anonima",
+    "nombre": "La Anónima",
+    "color": "#005b96",
+    "tipo": "nacional con sucursales en capital",
+    "fuente": "sepa",
+    "sepa": { "comercio": 2, "bandera": 1 },
+    "web": "https://www.laanonima.com.ar",
+    "sucursales_cordoba": [
+      "Poeta Lugones — Damián Garat 3255",
+      "Rivera Indarte — Bodereau 7571",
+      "Gral. Pueyrredón — Libertad 1051",
+      "San Cayetano — Av. Sabattini 3250"
+    ],
+    "notas": "Ex Hiper Libertad (comprados en 2026 y reinaugurados como La Anónima). Precios SEPA de Córdoba Capital."
+  },
+  {
+    "id": "cordiez",
+    "nombre": "Cordiez",
+    "color": "#6a1b9a",
+    "tipo": "cordobes",
+    "fuente": "vtex",
+    "api_base": "https://www.cordiez.com.ar/api/catalog_system/pub/products/search",
+    "web": "https://www.cordiez.com.ar",
+    "sucursales_cordoba": ["Córdoba Capital — ver sucursales en cordiez.com.ar"],
+    "notas": "Cadena cordobesa: todo su catálogo online corresponde a Córdoba. Catálogo completo vía API VTEX."
   },
   {
     "id": "mariano-max",
@@ -60,31 +120,48 @@
     "color": "#ff8200",
     "tipo": "cordobes",
     "fuente": "scrape",
-    "api_base": null,
     "web": "https://www.marianomax.com.ar/ofertas",
-    "sucursales_cordoba": ["Av. Colón 4200", "Villa Carlos Paz", "La Calera"],
-    "notas": "Cordobés. Sin API pública: scraping HTML de /ofertas con respaldo manual."
+    "sucursales_cordoba": ["Córdoba Capital — ver sucursales en marianomax.com.ar"],
+    "notas": "Cadena cordobesa sin API pública: se monitorean sus ofertas publicadas (cobertura parcial)."
   },
   {
-    "id": "cordiez",
-    "nombre": "Cordiez",
-    "color": "#6a1b9a",
-    "tipo": "cordobes",
+    "id": "makro",
+    "nombre": "Makro",
+    "color": "#1565c0",
+    "tipo": "mayorista con sucursales en capital",
     "fuente": "scrape",
-    "api_base": null,
-    "web": "https://www.cordiez.com.ar",
-    "sucursales_cordoba": ["Av. Sabattini", "Río Cuarto", "Villa María"],
-    "notas": "Cordobés. Scraping HTML con respaldo manual."
+    "web": "https://www.makro.com.ar",
+    "sucursales_cordoba": ["Av. Colón 3500", "Av. Juan B. Justo y Circunvalación"],
+    "notas": "Mayorista. Sin API pública estable: monitoreo best-effort (cobertura parcial)."
   },
   {
-    "id": "libertad",
-    "nombre": "Hiper Libertad",
-    "color": "#00838f",
+    "id": "tadicor",
+    "nombre": "Tadicor",
+    "color": "#c62828",
+    "tipo": "mayorista cordobes",
+    "fuente": "scrape",
+    "web": "https://www.tadicor.com.ar",
+    "sucursales_cordoba": ["Av. Monseñor P. Cabrera y Circunvalación"],
+    "notas": "Mayorista cordobés. Sin API pública: monitoreo best-effort (cobertura parcial)."
+  },
+  {
+    "id": "almacor",
+    "nombre": "Almacor",
+    "color": "#2e7d3a",
     "tipo": "cordobes",
     "fuente": "scrape",
-    "api_base": null,
-    "web": "https://www.hiperlibertad.com.ar",
-    "sucursales_cordoba": ["Rodríguez del Busto", "Villa Cabrera"],
-    "notas": "Cordobés (Grupo Libertad). Scraping HTML con respaldo manual."
+    "web": "https://www.almacor.com.ar",
+    "sucursales_cordoba": ["Córdoba Capital — ver sucursales en almacor.com.ar"],
+    "notas": "Cadena cordobesa. Sin API pública: monitoreo best-effort (cobertura parcial)."
+  },
+  {
+    "id": "diarco",
+    "nombre": "Diarco",
+    "color": "#0277bd",
+    "tipo": "mayorista con sucursales en capital",
+    "fuente": "scrape",
+    "web": "https://www.diarco.com.ar",
+    "sucursales_cordoba": ["Córdoba Capital — ver sucursales en diarco.com.ar"],
+    "notas": "Mayorista/minorista. Sin API pública estable: monitoreo best-effort (cobertura parcial)."
   }
 ]

@@ -1,13 +1,13 @@
-# 🛒 SUPERBARATO — Ofertas de supermercados en Córdoba
+# 🛒 SUPERBARATO — Catálogo completo, SOLO Córdoba Capital
 
-Comparador estático en **GitHub Pages** para Córdoba Capital: agrupa las mejores ofertas **por categorías**, **compara el mismo producto entre supers**, **recomienda a dónde ir por rubro** y arma **listas de compras por supermercado** (carrito óptimo).
+Comparador estático en **GitHub Pages**, actualizado **1 vez por día** con el catálogo completo de todos los supermercados de **Córdoba Capital (Argentina)**. Nada del interior, nada de otras provincias: agrupa las mejores ofertas **por categorías**, **compara el mismo producto entre supers**, **recomienda a dónde ir por rubro** y arma **listas de compras por supermercado** (carrito óptimo).
 
 ## Skills orquestados (super-skill)
 | Skill | Aporte |
 |---|---|
 | `backend-patterns` | Bot con retry+backoff, sin N+1, un solo JSON |
 | `frontend-patterns` | Debounce en buscador, composición simple, render por grupos |
-| `actualizar-lista-precios` | Regla **nunca inventar precios**: si el bot consigue <20 items, conserva el JSON y marca `stale` |
+| `actualizar-lista-precios` | Regla **nunca inventar precios**: si una fuente falla, conserva el archivo previo y marca `stale` |
 | `hallmark` / `coding-standards` | Vanilla sin framework para Pages (rápido, sin build) |
 
 ## Repos existentes que inspiraron esto (no reinventar)
@@ -21,30 +21,39 @@ Comparador estático en **GitHub Pages** para Córdoba Capital: agrupa las mejor
 ## Estructura
 ```
 index.html                  → sitio (raíz, apto GitHub Pages)
-assets/app.js, styles.css   → frontend vanilla
-data/supermercados.json     → 8 supers (5 VTEX + 3 scrape cordobés)
-data/categorias.json        → 8 categorías
-data/ofertas.json           → precios planos {producto, marca, categoria, super, precio...}
-scripts/update_precios.py   → bot diario (solo stdlib)
-.github/workflows/update-precios.yml → cron 08:00 ART + commit automático
+assets/app.js, styles.css   → frontend vanilla (carga data/catalogo/)
+data/supermercados.json     → 15 supers, todos con presencia en Córdoba Capital
+data/categorias.json        → 9 categorías (clasificación por palabras clave)
+data/catalogo/index.json    → índice generado por el bot (SOLO capital)
+data/catalogo/<super>.json  → catálogo completo por super (precios = mediana capital)
+data/ofertas.json           → legacy: solo fallback si el bot aún no corrió
+scripts/update_precios.py   → bot diario v2 (solo stdlib, con --selftest)
+.github/workflows/update-precios.yml → cron diario 08:00 ART + commit automático
 ```
 
 ## Probar local
 ```powershell
 python -m http.server 8000
 # abrir http://localhost:8000
-python scripts/update_precios.py --check
+python scripts/update_precios.py --selftest        # sin red: fixture + categorías
+python scripts/update_precios.py --solo cordiez --max-paginas 2   # VTEX en vivo
 ```
 
 ## Publicar en GitHub Pages
 1. `git remote add origin <tu-repo>`, push a `main` (o `master`).
 2. En GitHub: **Settings → Pages → Deploy from branch → main, /(root)**.
-3. El workflow corre solo cada día a las 08:00 ART y commitea `data/ofertas.json`.
+3. El workflow corre solo cada día a las 08:00 ART y commitea `data/catalogo/`.
 
-## Fuentes por super (Córdoba)
-- **VTEX (API pública, sin key):** Vea, Disco, Jumbo, Carrefour, Día.
-- **Scrape HTML + respaldo manual:** Mariano Max (`/ofertas`), Cordiez, Hiper Libertad.
-- **Fase 2:** ChangoMás, Makro, Tadicor, Almacor + dump SEPA oficial.
+## Fuentes (todas filtradas a Córdoba Capital)
+- **SEPA minorista oficial** (dump diario CC-BY): precios por sucursal → se conservan
+  solo sucursales de la localidad Córdoba (AR-X). Cubre Vea, Disco, Jumbo,
+  Carrefour (Hiper/Market/Express/Maxi), Día, La Anónima (ex Libertad) y toda
+  bandera que reporte en capital (descubrimiento dinámico). Precio publicado =
+  mediana entre sucursales capitalinas.
+- **VTEX full-catalog:** Cordiez (cadena cordobesa, catálogo completo paginado).
+- **Scrape best-effort (cobertura parcial):** Mariano Max, Makro, Tadicor, Almacor, Diarco.
+- Novedad 2026: los 4 Hiper Libertad de capital (Rodríguez del Busto, Gral. Paz,
+  Rivera, Sabattini) pasaron a **La Anónima**.
 
 ## Reglas
 - Nunca commitear precios inventados: el bot falla cerrado (`stale:true`) y conserva datos previos.

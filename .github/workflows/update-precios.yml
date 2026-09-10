@@ -11,6 +11,7 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -22,6 +23,6 @@ jobs:
         run: |
           git config user.name "superbarato-bot"
           git config user.email "bot@superbarato.local"
-          git add data/ofertas.json
-          git diff --cached --quiet || git commit -m "update: precios $(date +%F)"
+          git add data/catalogo/
+          git diff --cached --quiet || git commit -m "update: catalogo Cordoba Capital $(date +%F)"
           git push

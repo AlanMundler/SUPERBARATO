@@ -1,8 +1,10 @@
-// SUPERBARATO Córdoba — frontend estático (GitHub Pages, sin build)
-// Patrones: composición simple, debounce en búsqueda, carrito óptimo por mejor precio.
+// SUPERBARATO Córdoba Capital (exclusivo) — frontend estático, sin build.
+// Carga data/catalogo/index.json + un JSON por super (catálogo completo).
+// Fallback: data/ofertas.json (legacy) si el bot aún no corrió.
 
 const state = {
-  supers: [],
+  supersMeta: [],   // data/supermercados.json (colores, nombres, sucursales)
+  supersIdx: [],    // catalogo/index.json -> supers reales con datos
   categorias: [],
   ofertas: [],
   meta: {},
@@ -10,27 +12,36 @@ const state = {
   busqueda: "",
   superFiltro: "",
   comparando: null,
-  lista: JSON.parse(localStorage.getItem("superbarato-lista") || "[]"), // [ofertaId]
+  lista: JSON.parse(localStorage.getItem("superbarato-lista") || "[]"),
 };
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => "$" + Number(n).toLocaleString("es-AR");
-const superById = (id) => state.supers.find((s) => s.id === id) || { nombre: id, color: "#666" };
+
+function superById(id) {
+  return state.supersMeta.find((s) => s.id === id)
+    || state.supersIdx.find((s) => s.id === id)
+    || { nombre: id, color: "#64748b" };
+}
 
 function debounce(fn, ms) {
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
 
-// Agrupa ofertas planas por producto+marca normalizado
+function grupoKey(o) {
+  return (o.ean ? "E" + o.ean : "N" + (o.producto + "||" + o.marca).toLowerCase());
+}
+
+// Agrupa ofertas planas por EAN (o nombre+marca) para comparar entre supers
 function grupos() {
   const map = new Map();
   for (const o of state.ofertas) {
     if (state.catActiva && o.categoria !== state.catActiva) continue;
     if (state.superFiltro && o.super !== state.superFiltro) continue;
     if (state.busqueda && !(o.producto + " " + o.marca).toLowerCase().includes(state.busqueda)) continue;
-    const key = o.producto + "||" + o.marca;
-    if (!map.has(key)) map.set(key, { producto: o.producto, marca: o.marca, categoria: o.categoria, items: [] });
+    const key = grupoKey(o);
+    if (!map.has(key)) map.set(key, { key, producto: o.producto, marca: o.marca, categoria: o.categoria, items: [] });
     map.get(key).items.push(o);
   }
   for (const g of map.values()) g.items.sort((a, b) => a.precio - b.precio);
@@ -42,15 +53,18 @@ function descuentoMax(g) {
 }
 
 function renderMeta() {
-  const total = state.ofertas.length;
+  const nSupers = new Set(state.ofertas.map((o) => o.super)).size;
   $("meta-linea").textContent =
-    `${total} precios · ${state.supers.length} supers · Zona Córdoba Capital · Actualizado: ${state.meta.actualizado || "?"} · Fuente: ${state.meta.fuente || "?"}`;
+    `${state.ofertas.length.toLocaleString("es-AR")} precios · ${nSupers} supers · ` +
+    `SOLO Córdoba Capital · Actualizado: ${state.meta.actualizado || "?"} · Fuente: ${state.meta.fuente || "?"}`;
 }
 
 function renderTabs() {
   const nav = $("tabs-categorias");
   nav.innerHTML = "";
-  const todas = [{ id: "", nombre: "Todas", icono: "⭐" }, ...state.categorias];
+  const presentes = new Set(state.ofertas.map((o) => o.categoria));
+  const cats = state.categorias.filter((c) => presentes.has(c.id));
+  const todas = [{ id: "", nombre: "Todas", icono: "⭐" }, ...cats];
   for (const c of todas) {
     const b = document.createElement("button");
     b.textContent = `${c.icono || ""} ${c.nombre}`;
@@ -84,8 +98,8 @@ function renderOfertas() {
         <br/><button class="btn-add" data-add="${mejor.id}">➕ agregar</button>
       </div>`;
     div.onclick = (e) => {
-      if (e.target.dataset.add) return; // el botón agrega, no compara
-      state.comparando = g.producto + "||" + g.marca;
+      if (e.target.dataset.add) return;
+      state.comparando = g.key;
       renderComparador();
     };
     box.appendChild(div);
@@ -95,11 +109,21 @@ function renderOfertas() {
   });
 }
 
+function gruposTodos() {
+  const map = new Map();
+  for (const o of state.ofertas) {
+    const key = grupoKey(o);
+    if (!map.has(key)) map.set(key, { key, producto: o.producto, marca: o.marca, categoria: o.categoria, items: [] });
+    map.get(key).items.push(o);
+  }
+  for (const g of map.values()) g.items.sort((a, b) => a.precio - b.precio);
+  return [...map.values()];
+}
+
 function renderComparador() {
   const box = $("comparador-detalle");
   if (!state.comparando) return;
-  const g = grupos().find((x) => x.producto + "||" + x.marca === state.comparando)
-    || gruposTodos().find((x) => x.producto + "||" + x.marca === state.comparando);
+  const g = gruposTodos().find((x) => x.key === state.comparando);
   if (!g) { box.innerHTML = '<p class="muted">Producto fuera del filtro actual.</p>'; return; }
   const rows = g.items.map((o, i) => {
     const s = superById(o.super);
@@ -111,20 +135,9 @@ function renderComparador() {
   box.querySelectorAll("[data-add]").forEach((b) => { b.onclick = () => agregar(b.dataset.add); });
 }
 
-function gruposTodos() {
-  const map = new Map();
-  for (const o of state.ofertas) {
-    const key = o.producto + "||" + o.marca;
-    if (!map.has(key)) map.set(key, { producto: o.producto, marca: o.marca, categoria: o.categoria, items: [] });
-    map.get(key).items.push(o);
-  }
-  for (const g of map.values()) g.items.sort((a, b) => a.precio - b.precio);
-  return [...map.values()];
-}
-
 // Recomendación: por cada categoría, qué super tiene más "mejores precios"
 function renderRecos() {
-  const wins = {}; // cat -> {super: count}
+  const wins = {};
   for (const g of gruposTodos()) {
     const mejor = g.items[0];
     wins[g.categoria] = wins[g.categoria] || {};
@@ -139,13 +152,13 @@ function renderRecos() {
     const s = superById(superId);
     const d = document.createElement("div");
     d.className = "reco";
-    d.innerHTML = `<strong>${c.icono} ${c.nombre}:</strong> conviene <strong>${s.nombre}</strong> (${n} producto${n > 1 ? "s" : ""} más barato${n > 1 ? "s" : ""}).`;
+    d.innerHTML = `<strong>${c.icono} ${c.nombre}:</strong> conviene <strong>${s.nombre}</strong> (${n} producto${n > 1 ? "s" : ""} más barato${n > 1 ? "s" : ""}, solo capital).`;
     box.appendChild(d);
   }
   if (!box.children.length) box.innerHTML = '<p class="muted">Todavía no hay datos para recomendar.</p>';
 }
 
-// ---- Lista de compras: carrito óptimo ----
+// ---- Lista de compras: carrito óptimo (mejor precio por producto) ----
 function agregar(id) {
   state.lista.push(id);
   guardar();
@@ -154,23 +167,26 @@ function guardar() {
   localStorage.setItem("superbarato-lista", JSON.stringify(state.lista));
   renderListas();
 }
+function mejorDe(id) {
+  const o = state.ofertas.find((x) => x.id === id);
+  if (!o) return null;
+  const grupo = gruposTodos().find((g) => g.key === grupoKey(o));
+  return grupo ? grupo.items[0] : o;
+}
 function renderListas() {
   const box = $("listas-detalle");
   if (!state.lista.length) { box.innerHTML = '<p class="muted">Lista vacía. Agregá ofertas con ➕.</p>'; return; }
   const porSuper = {};
   let totalOptimo = 0;
   for (const id of state.lista) {
-    const o = state.ofertas.find((x) => x.id === id);
-    if (!o) continue;
-    // carrito óptimo: si el producto existe más barato en otro super, sugerir el mejor
-    const grupo = gruposTodos().find((g) => g.producto === o.producto && g.marca === o.marca);
-    const mejor = grupo ? grupo.items[0] : o;
+    const mejor = mejorDe(id);
+    if (!mejor) continue;
     porSuper[mejor.super] = porSuper[mejor.super] || { items: [], total: 0 };
     porSuper[mejor.super].items.push(mejor);
     porSuper[mejor.super].total += mejor.precio;
     totalOptimo += mejor.precio;
   }
-  let html = `<p><strong>Total óptimo estimado: ${fmt(totalOptimo)}</strong> en ${Object.keys(porSuper).length} super(s). Ir a un solo super suele costar más: lo óptimo es dividir.</p>`;
+  let html = `<p><strong>Total óptimo estimado: ${fmt(totalOptimo)}</strong> en ${Object.keys(porSuper).length} super(s) de Córdoba Capital.</p>`;
   for (const [superId, g] of Object.entries(porSuper)) {
     const s = superById(superId);
     html += `<div class="super-grupo"><h3><span class="badge" style="background:${s.color}">${s.nombre}</span> ${fmt(g.total)}</h3><ul>`;
@@ -181,13 +197,11 @@ function renderListas() {
 }
 
 function textoLista() {
-  const lineas = ["SUPERBARATO Córdoba — mi lista óptima"];
+  const lineas = ["SUPERBARATO Córdoba Capital — mi lista óptima"];
   const porSuper = {};
   for (const id of state.lista) {
-    const o = state.ofertas.find((x) => x.id === id);
-    if (!o) continue;
-    const grupo = gruposTodos().find((g) => g.producto === o.producto && g.marca === o.marca);
-    const mejor = grupo ? grupo.items[0] : o;
+    const mejor = mejorDe(id);
+    if (!mejor) continue;
     (porSuper[mejor.super] = porSuper[mejor.super] || []).push(mejor);
   }
   for (const [sid, items] of Object.entries(porSuper)) {
@@ -197,21 +211,65 @@ function textoLista() {
   return lineas.join("\n");
 }
 
+async function cargarCatalogo() {
+  const idx = await fetch("data/catalogo/index.json").then((r) => {
+    if (!r.ok) throw new Error("sin catalogo");
+    return r.json();
+  });
+  state.meta = idx;
+  state.supersIdx = idx.supers || [];
+  const archivos = idx.supers || [];
+  let hechos = 0;
+  const partes = await Promise.all(archivos.map(async (s) => {
+    try {
+      const d = await fetch(`data/catalogo/${s.id}.json`).then((r) => r.json());
+      hechos++;
+      $("meta-linea").textContent = `Cargando catálogo de Córdoba Capital… ${hechos}/${archivos.length} supers`;
+      return (d.items || []).map((o) => ({
+        id: `${o.ean}@${s.id}`, ean: o.ean || "", producto: o.producto,
+        marca: o.marca || "Varias", categoria: o.categoria || "otros",
+        super: s.id, precio: o.precio, precio_lista: o.precio_lista || o.precio,
+        promo: !!o.promo, suc: o.suc || 1,
+      }));
+    } catch (e) {
+      console.warn("sin datos de", s.id);
+      return [];
+    }
+  }));
+  return partes.flat();
+}
+
+async function cargarLegacy() {
+  const of = await fetch("data/ofertas.json").then((r) => r.json());
+  state.meta = of.meta || {};
+  return (of.ofertas || of).map((o) => ({
+    id: o.id, ean: "", producto: o.producto, marca: o.marca || "Varias",
+    categoria: o.categoria || "otros", super: o.super, precio: o.precio,
+    precio_lista: o.precio_lista || o.precio,
+    promo: (o.precio_lista || o.precio) > o.precio, suc: 1,
+  }));
+}
+
 async function init() {
-  const [supers, cats, of] = await Promise.all([
+  const [supers, cats] = await Promise.all([
     fetch("data/supermercados.json").then((r) => r.json()),
     fetch("data/categorias.json").then((r) => r.json()),
-    fetch("data/ofertas.json").then((r) => r.json()),
   ]);
-  state.supers = supers;
+  state.supersMeta = supers;
   state.categorias = cats;
-  state.ofertas = of.ofertas || of;
-  state.meta = of.meta || {};
+
+  try {
+    state.ofertas = await cargarCatalogo();
+  } catch (e) {
+    state.ofertas = await cargarLegacy();
+  }
 
   const sel = $("filtro-super");
-  for (const s of supers) {
+  const presentes = [...new Set(state.ofertas.map((o) => o.super))];
+  for (const sid of presentes) {
+    const s = superById(sid);
     const o = document.createElement("option");
-    o.value = s.id; o.textContent = s.nombre;
+    o.value = sid; o.textContent = s.nombre;
     sel.appendChild(o);
   }
   sel.onchange = () => { state.superFiltro = sel.value; renderOfertas(); };
