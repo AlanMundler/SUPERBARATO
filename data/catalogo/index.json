@@ -2,10 +2,21 @@
  "actualizado": "2026-09-10",
  "zona": "Córdoba Capital (exclusivo)",
  "fuente": "sepa+vtex+scrape",
- "total_items": 12746,
- "total_supers": 5,
+ "total_items": 15736,
+ "total_supers": 8,
  "nota": "Precios de sucursales de Córdoba Capital (SEPA) + cadenas cordobesas. Nada fuera de la capital.",
  "supers": [
+  {
+   "id": "almacor",
+   "nombre": "Almacor",
+   "items": 103,
+   "sucursales": 0,
+   "cobertura": "parcial (folleto)",
+   "fuente": "pdf",
+   "zona": "Córdoba Capital",
+   "actualizado": "2026-09-10",
+   "stale": false
+  },
   {
    "id": "carrefour",
    "nombre": "Carrefour Online",
@@ -20,7 +31,7 @@
   {
    "id": "cordiez",
    "nombre": "Cordiez",
-   "items": 2550,
+   "items": 2517,
    "sucursales": 0,
    "cobertura": "completa",
    "fuente": "vtex",
@@ -51,9 +62,31 @@
    "stale": false
   },
   {
+   "id": "la-distri",
+   "nombre": "La Distri",
+   "items": 367,
+   "sucursales": 0,
+   "cobertura": "parcial (mayorista)",
+   "fuente": "sheet",
+   "zona": "Córdoba Capital",
+   "actualizado": "2026-09-10",
+   "stale": false
+  },
+  {
+   "id": "mas",
+   "nombre": "ChangoMas",
+   "items": 2550,
+   "sucursales": 0,
+   "cobertura": "completa",
+   "fuente": "vtex",
+   "zona": "Online (entrega en Córdoba Capital)",
+   "actualizado": "2026-09-10",
+   "stale": false
+  },
+  {
    "id": "vea",
    "nombre": "Vea",
-   "items": 2547,
+   "items": 2550,
    "sucursales": 0,
    "cobertura": "completa",
    "fuente": "vtex",
