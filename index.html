@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SUPERBARATO — Ofertas de supermercados en Córdoba</title>
+  <meta name="description" content="Comparador de ofertas de supermercados de Córdoba Capital: Vea, Disco, Jumbo, Carrefour, Día, Mariano Max, Cordiez y Libertad. Por categorías, con recomendaciones y listas de compras." />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <h1>🛒 SUPERBARATO <span>Córdoba</span></h1>
+      <p id="meta-linea">Cargando precios…</p>
+      <div class="buscador-row">
+        <input id="buscador" type="search" placeholder="Buscar: yerba, leche, asado, shampoo…" autocomplete="off" />
+        <select id="filtro-super">
+          <option value="">Todos los supers</option>
+        </select>
+      </div>
+      <nav id="tabs-categorias" class="tabs"></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="recomendaciones" class="card">
+      <h2>📍 ¿A dónde conviene ir?</h2>
+      <div id="reco-lista"></div>
+    </section>
+
+    <section class="grid-2">
+      <section id="ofertas" class="card">
+        <h2>🔥 Mejores ofertas por categoría</h2>
+        <div id="ofertas-lista"></div>
+      </section>
+
+      <aside id="comparador" class="card">
+        <h2>⚖️ Comparador</h2>
+        <p class="muted">Tocá un producto para comparar su precio en cada super. Se resalta el más barato.</p>
+        <div id="comparador-detalle"><p class="muted">Elegí un producto de la lista.</p></div>
+      </aside>
+    </section>
+
+    <section id="listas" class="card">
+      <h2>🧾 Mis listas por supermercado</h2>
+      <p class="muted">Agregá productos con ➕. La lista se agrupa sola por super al mejor precio (carrito óptimo) y se guarda en tu navegador.</p>
+      <div class="lista-actions">
+        <button id="btn-optima">Ver lista óptima</button>
+        <button id="btn-copiar">Copiar lista</button>
+        <button id="btn-wa">Enviar por WhatsApp</button>
+        <button id="btn-limpiar" class="danger">Vaciar</button>
+      </div>
+      <div id="listas-detalle"></div>
+    </section>
+
+    <footer class="muted footer">
+      <p>Precios de referencia para Córdoba Capital. Verificá el precio final en cada super antes de comprar. Fuente: APIs VTEX + SEPA/Precios Claros + scraping de folletos cordobeses. Actualización diaria vía GitHub Actions.</p>
+      <p><a href="https://github.com">Código</a> · Hecho para ahorrar en Córdoba 🇦🇷</p>
+    </footer>
+  </main>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

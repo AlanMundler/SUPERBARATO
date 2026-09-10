@@ -1,0 +1,90 @@
+[
+  {
+    "id": "vea",
+    "nombre": "Vea",
+    "color": "#e30613",
+    "tipo": "nacional",
+    "fuente": "vtex",
+    "api_base": "https://www.vea.com.ar/api/catalog_system/pub/products/search",
+    "web": "https://www.vea.com.ar",
+    "sucursales_cordoba": ["Av. Colón", "Gral. Paz", "Alta Córdoba", "Villa Allende"],
+    "notas": "Cencosud. Comparte catálogo base con Disco/Jumbo."
+  },
+  {
+    "id": "disco",
+    "nombre": "Disco",
+    "color": "#009444",
+    "tipo": "nacional",
+    "fuente": "vtex",
+    "api_base": "https://www.disco.com.ar/api/catalog_system/pub/products/search",
+    "web": "https://www.disco.com.ar",
+    "sucursales_cordoba": ["Nueva Córdoba", "Cerro de las Rosas", "Villa Belgrano"],
+    "notas": "Cencosud. Suele estar arriba en precio vs Vea."
+  },
+  {
+    "id": "jumbo",
+    "nombre": "Jumbo",
+    "color": "#004b93",
+    "tipo": "nacional",
+    "fuente": "vtex",
+    "api_base": "https://www.jumbo.com.ar/api/catalog_system/pub/products/search",
+    "web": "https://www.jumbo.com.ar",
+    "sucursales_cordoba": ["Córdoba Shopping", "Patio Olmos área"],
+    "notas": "Cencosud. Foco en frescos e importados."
+  },
+  {
+    "id": "carrefour",
+    "nombre": "Carrefour",
+    "color": "#004e9e",
+    "tipo": "nacional",
+    "fuente": "vtex",
+    "api_base": "https://www.carrefour.com.ar/api/catalog_system/pub/products/search",
+    "web": "https://www.carrefour.com.ar",
+    "sucursales_cordoba": ["Market Gral. Paz", "Express Nueva Córdoba", "Maxi Circunvalación"],
+    "notas": "Formatos Market/Express/Maxi. Maxi compite con mayoristas."
+  },
+  {
+    "id": "dia",
+    "nombre": "Día",
+    "color": "#ff0000",
+    "tipo": "nacional",
+    "fuente": "vtex",
+    "api_base": "https://www.diaonline.com.ar/api/catalog_system/pub/products/search",
+    "web": "https://www.diaonline.com.ar",
+    "sucursales_cordoba": ["Centro", "Alberdi", "San Vicente"],
+    "notas": "Fuerte en marca propia y almacén."
+  },
+  {
+    "id": "mariano-max",
+    "nombre": "Mariano Max",
+    "color": "#ff8200",
+    "tipo": "cordobes",
+    "fuente": "scrape",
+    "api_base": null,
+    "web": "https://www.marianomax.com.ar/ofertas",
+    "sucursales_cordoba": ["Av. Colón 4200", "Villa Carlos Paz", "La Calera"],
+    "notas": "Cordobés. Sin API pública: scraping HTML de /ofertas con respaldo manual."
+  },
+  {
+    "id": "cordiez",
+    "nombre": "Cordiez",
+    "color": "#6a1b9a",
+    "tipo": "cordobes",
+    "fuente": "scrape",
+    "api_base": null,
+    "web": "https://www.cordiez.com.ar",
+    "sucursales_cordoba": ["Av. Sabattini", "Río Cuarto", "Villa María"],
+    "notas": "Cordobés. Scraping HTML con respaldo manual."
+  },
+  {
+    "id": "libertad",
+    "nombre": "Hiper Libertad",
+    "color": "#00838f",
+    "tipo": "cordobes",
+    "fuente": "scrape",
+    "api_base": null,
+    "web": "https://www.hiperlibertad.com.ar",
+    "sucursales_cordoba": ["Rodríguez del Busto", "Villa Cabrera"],
+    "notas": "Cordobés (Grupo Libertad). Scraping HTML con respaldo manual."
+  }
+]

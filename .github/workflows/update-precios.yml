@@ -1,0 +1,27 @@
+name: Actualizar precios
+
+on:
+  schedule:
+    - cron: "0 11 * * *" # 08:00 ART diario
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Correr bot de precios
+        run: python scripts/update_precios.py || echo "Bot marcó stale, se conserva JSON anterior"
+      - name: Commit si hubo cambios
+        run: |
+          git config user.name "superbarato-bot"
+          git config user.email "bot@superbarato.local"
+          git add data/ofertas.json
+          git diff --cached --quiet || git commit -m "update: precios $(date +%F)"
+          git push

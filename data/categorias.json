@@ -1,0 +1,10 @@
+[
+  { "id": "almacen", "nombre": "Almacén", "icono": "🛒", "descripcion": "Yerba, fideos, arroz, aceite, harina" },
+  { "id": "bebidas", "nombre": "Bebidas", "icono": "🥤", "descripcion": "Gaseosas, jugos, cervezas, vinos" },
+  { "id": "lacteos", "nombre": "Lácteos", "icono": "🥛", "descripcion": "Leche, quesos, yogures" },
+  { "id": "carniceria", "nombre": "Carnicería", "icono": "🥩", "descripcion": "Carne vacuna, pollo, cerdo" },
+  { "id": "verduleria", "nombre": "Verdulería", "icono": "🥬", "descripcion": "Frutas y verduras" },
+  { "id": "panaderia", "nombre": "Panadería", "icono": "🍞", "descripcion": "Pan, facturas, masas" },
+  { "id": "limpieza", "nombre": "Limpieza", "icono": "🧹", "descripcion": "Lavandina, detergente, papel" },
+  { "id": "perfumeria", "nombre": "Perfumería", "icono": "🧴", "descripcion": "Shampoo, jabón, pañales" }
+]

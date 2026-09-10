@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "aviso": "DATOS DE EJEMPLO — se reemplazan con la corrida diaria del bot (scripts/update_precios.py). Nunca usar como precio real.",
+    "moneda": "ARS",
+    "zona": "Córdoba Capital",
+    "actualizado": "2026-09-10",
+    "fuente": "ejemplo-manual"
+  },
+  "ofertas": [
+    { "id": "yerba-1kg-vea", "producto": "Yerba mate 1kg", "marca": "Taragüí", "categoria": "almacen", "super": "vea", "precio": 4899, "precio_lista": 5499, "unidad": "1kg", "fuente": "ejemplo" },
+    { "id": "yerba-1kg-dia", "producto": "Yerba mate 1kg", "marca": "Taragüí", "categoria": "almacen", "super": "dia", "precio": 4599, "precio_lista": 5299, "unidad": "1kg", "fuente": "ejemplo" },
+    { "id": "yerba-1kg-mariano", "producto": "Yerba mate 1kg", "marca": "Taragüí", "categoria": "almacen", "super": "mariano-max", "precio": 4750, "precio_lista": 5200, "unidad": "1kg", "fuente": "ejemplo" },
+    { "id": "fideos-500g-vea", "producto": "Fideos tallarín 500g", "marca": "Matarazzo", "categoria": "almacen", "super": "vea", "precio": 1299, "precio_lista": 1499, "unidad": "500g", "fuente": "ejemplo" },
+    { "id": "fideos-500g-carrefour", "producto": "Fideos tallarín 500g", "marca": "Matarazzo", "categoria": "almacen", "super": "carrefour", "precio": 1199, "precio_lista": 1499, "unidad": "500g", "fuente": "ejemplo" },
+    { "id": "fideos-500g-cordiez", "producto": "Fideos tallarín 500g", "marca": "Matarazzo", "categoria": "almacen", "super": "cordiez", "precio": 1150, "precio_lista": 1400, "unidad": "500g", "fuente": "ejemplo" },
+    { "id": "aceite-15l-disco", "producto": "Aceite girasol 1.5L", "marca": "Natura", "categoria": "almacen", "super": "disco", "precio": 3899, "precio_lista": 4299, "unidad": "1.5L", "fuente": "ejemplo" },
+    { "id": "aceite-15l-jumbo", "producto": "Aceite girasol 1.5L", "marca": "Natura", "categoria": "almacen", "super": "jumbo", "precio": 3999, "precio_lista": 4299, "unidad": "1.5L", "fuente": "ejemplo" },
+    { "id": "aceite-15l-libertad", "producto": "Aceite girasol 1.5L", "marca": "Natura", "categoria": "almacen", "super": "libertad", "precio": 3699, "precio_lista": 4199, "unidad": "1.5L", "fuente": "ejemplo" },
+    { "id": "leche-1l-vea", "producto": "Leche entera 1L", "marca": "La Serenísima", "categoria": "lacteos", "super": "vea", "precio": 1599, "precio_lista": 1799, "unidad": "1L", "fuente": "ejemplo" },
+    { "id": "leche-1l-dia", "producto": "Leche entera 1L", "marca": "La Serenísima", "categoria": "lacteos", "super": "dia", "precio": 1499, "precio_lista": 1750, "unidad": "1L", "fuente": "ejemplo" },
+    { "id": "leche-1l-mariano", "producto": "Leche entera 1L", "marca": "La Serenísima", "categoria": "lacteos", "super": "mariano-max", "precio": 1550, "precio_lista": 1750, "unidad": "1L", "fuente": "ejemplo" },
+    { "id": "queso-cremoso-carrefour", "producto": "Queso cremoso x kg", "marca": "Sancor", "categoria": "lacteos", "super": "carrefour", "precio": 9499, "precio_lista": 10999, "unidad": "1kg", "fuente": "ejemplo" },
+    { "id": "queso-cremoso-libertad", "producto": "Queso cremoso x kg", "marca": "Sancor", "categoria": "lacteos", "super": "libertad", "precio": 8999, "precio_lista": 10499, "unidad": "1kg", "fuente": "ejemplo" },
+    { "id": "gaseosa-225l-disco", "producto": "Gaseosa cola 2.25L", "marca": "Coca-Cola", "categoria": "bebidas", "super": "disco", "precio": 3299, "precio_lista": 3699, "unidad": "2.25L", "fuente": "ejemplo" },
+    { "id": "gaseosa-225l-vea", "producto": "Gaseosa cola 2.25L", "marca": "Coca-Cola", "categoria": "bebidas", "super": "vea", "precio": 3199, "precio_lista": 3699, "unidad": "2.25L", "fuente": "ejemplo" },
+    { "id": "gaseosa-225l-cordiez", "producto": "Gaseosa cola 2.25L", "marca": "Coca-Cola", "categoria": "bebidas", "super": "cordiez", "precio": 3099, "precio_lista": 3599, "unidad": "2.25L", "fuente": "ejemplo" },
+    { "id": "asado-carrefour", "producto": "Asado x kg", "marca": "Novillo", "categoria": "carniceria", "super": "carrefour", "precio": 10999, "precio_lista": 12499, "unidad": "1kg", "fuente": "ejemplo" },
+    { "id": "asado-mariano", "producto": "Asado x kg", "marca": "Novillo", "categoria": "carniceria", "super": "mariano-max", "precio": 9999, "precio_lista": 11999, "unidad": "1kg", "fuente": "ejemplo" },
+    { "id": "pollo-libertad", "producto": "Pollo entero x kg", "marca": "Granja", "categoria": "carniceria", "super": "libertad", "precio": 3299, "precio_lista": 3799, "unidad": "1kg", "fuente": "ejemplo" },
+    { "id": "pollo-dia", "producto": "Pollo entero x kg", "marca": "Granja", "categoria": "carniceria", "super": "dia", "precio": 3499, "precio_lista": 3899, "unidad": "1kg", "fuente": "ejemplo" },
+    { "id": "papa-mariano", "producto": "Papa x kg", "marca": "Fresca", "categoria": "verduleria", "super": "mariano-max", "precio": 899, "precio_lista": 1199, "unidad": "1kg", "fuente": "ejemplo" },
+    { "id": "papa-disco", "producto": "Papa x kg", "marca": "Fresca", "categoria": "verduleria", "super": "disco", "precio": 1099, "precio_lista": 1299, "unidad": "1kg", "fuente": "ejemplo" },
+    { "id": "pan-jumbo", "producto": "Pan francés x kg", "marca": "Panadería", "categoria": "panaderia", "super": "jumbo", "precio": 1999, "precio_lista": 2299, "unidad": "1kg", "fuente": "ejemplo" },
+    { "id": "pan-mariano", "producto": "Pan francés x kg", "marca": "Panadería", "categoria": "panaderia", "super": "mariano-max", "precio": 1799, "precio_lista": 2100, "unidad": "1kg", "fuente": "ejemplo" },
+    { "id": "lavandina-carrefour", "producto": "Lavandina 2L", "marca": "Ayudín", "categoria": "limpieza", "super": "carrefour", "precio": 1899, "precio_lista": 2199, "unidad": "2L", "fuente": "ejemplo" },
+    { "id": "lavandina-dia", "producto": "Lavandina 2L", "marca": "Ayudín", "categoria": "limpieza", "super": "dia", "precio": 1749, "precio_lista": 2099, "unidad": "2L", "fuente": "ejemplo" },
+    { "id": "detergente-vea", "producto": "Detergente 750ml", "marca": "Ala", "categoria": "limpieza", "super": "vea", "precio": 1699, "precio_lista": 1999, "unidad": "750ml", "fuente": "ejemplo" },
+    { "id": "detergente-libertad", "producto": "Detergente 750ml", "marca": "Ala", "categoria": "limpieza", "super": "libertad", "precio": 1599, "precio_lista": 1899, "unidad": "750ml", "fuente": "ejemplo" },
+    { "id": "shampoo-disco", "producto": "Shampoo 400ml", "marca": "Plusbelle", "categoria": "perfumeria", "super": "disco", "precio": 3299, "precio_lista": 4299, "unidad": "400ml", "fuente": "ejemplo" },
+    { "id": "shampoo-carrefour", "producto": "Shampoo 400ml", "marca": "Plusbelle", "categoria": "perfumeria", "super": "carrefour", "precio": 2999, "precio_lista": 4199, "unidad": "400ml", "fuente": "ejemplo" }
+  ]
+}
