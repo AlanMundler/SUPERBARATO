@@ -77,6 +77,16 @@
     "notas": "Formato mayorista. Precios SEPA filtrados a Córdoba Capital únicamente."
   },
   {
+    "id": "carrefour",
+    "nombre": "Carrefour Online",
+    "color": "#004e9e",
+    "tipo": "nacional con entrega en capital",
+    "fuente": "vtex",
+    "web": "https://www.carrefour.com.ar",
+    "sucursales_cordoba": ["Tienda online con entrega en Córdoba Capital"],
+    "notas": "Respaldo cuando SEPA falla: precios de la tienda online (entrega en capital). Si SEPA trae las banderas, este se omite."
+  },
+  {
     "id": "dia",
     "nombre": "Día",
     "color": "#ef6c00",

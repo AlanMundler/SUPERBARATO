@@ -158,6 +158,16 @@ function renderRecos() {
   if (!box.children.length) box.innerHTML = '<p class="muted">Todavía no hay datos para recomendar.</p>';
 }
 
+function renderFuentes() {
+  const box = $("fuentes-lista");
+  if (!box || !state.supersIdx.length) { if (box) box.innerHTML = '<p class="muted">Datos de ejemplo.</p>'; return; }
+  box.innerHTML = state.supersIdx.map((s) => {
+    const meta = superById(s.id);
+    return `<div class="reco"><span class="badge" style="background:${meta.color || "#64748b"}">${s.nombre}</span> ` +
+      `${(s.items ?? 0).toLocaleString("es-AR")} productos · ${s.zona || ""} · cobertura ${s.cobertura || ""}${s.stale ? " · <strong>pendiente de actualizar</strong>" : ""}</div>`;
+  }).join("");
+}
+
 // ---- Lista de compras: carrito óptimo (mejor precio por producto) ----
 function agregar(id) {
   state.lista.push(id);
@@ -283,7 +293,7 @@ async function init() {
   $("btn-copiar").onclick = async () => { await navigator.clipboard.writeText(textoLista()); alert("Lista copiada ✅"); };
   $("btn-wa").onclick = () => { window.open("https://wa.me/?text=" + encodeURIComponent(textoLista()), "_blank"); };
 
-  renderMeta(); renderTabs(); renderOfertas(); renderRecos(); renderListas();
+  renderMeta(); renderTabs(); renderOfertas(); renderRecos(); renderFuentes(); renderListas();
 }
 
 init().catch((e) => {

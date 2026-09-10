@@ -551,6 +551,37 @@ def vtex_full_categorias(api_base, max_cats=None, max_paginas=600):
     return sorted(por_ean.values(), key=lambda o: o["precio"])
 
 
+# Cadenas con tienda online (verificadas 2026-09-10: search 206 OK).
+# Se usan como COMPLEMENTO: solo se publican si SEPA no trajo esa bandera
+# en la corrida (SEPA manda: precios de sucursal capitalina).
+VTEX_FALLBACK_BASES = {
+    "vea": "https://www.vea.com.ar/api/catalog_system/pub/products/search",
+    "disco": "https://www.disco.com.ar/api/catalog_system/pub/products/search",
+    "jumbo": "https://www.jumbo.com.ar/api/catalog_system/pub/products/search",
+    "carrefour": "https://www.carrefour.com.ar/api/catalog_system/pub/products/search",
+}
+VTEX_FALLBACK_NOMBRES = {
+    "vea": "Vea", "disco": "Disco", "jumbo": "Jumbo",
+    "carrefour": "Carrefour Online",
+}
+ZONA_ONLINE_CBA = "Online (entrega en Córdoba Capital)"
+
+
+def vtex_cadena(api_base, max_cats=None, max_paginas=600, etiqueta="vtex"):
+    """Unión plano + categorías (el plano solo llega al tope de offset)."""
+    plano = vtex_full(api_base, max_paginas=max_paginas)
+    extra = vtex_full_categorias(api_base, max_cats=max_cats,
+                                 max_paginas=max_paginas)
+    unidos = {o["ean"]: o for o in plano}
+    for o in extra:
+        if o["ean"] not in unidos or o["precio"] < unidos[o["ean"]]["precio"]:
+            unidos[o["ean"]] = o
+    items = sorted(unidos.values(), key=lambda o: o["precio"])
+    print(f"[{etiqueta}] plano={len(plano)} extra_cat={len(extra)} "
+          f"total={len(items)}", flush=True)
+    return items
+
+
 # ---------------------------------------------------------------- scrape
 SCRAPE_URLS = {
     "mariano-max": ["https://www.marianomax.com.ar/ofertas"],
@@ -583,15 +614,17 @@ def scrape_ofertas(urls):
 
 
 # ---------------------------------------------------------------- main
-def escribir_super(sid, nombre, items, fuente, fecha, cobertura, sucursales=0):
+def escribir_super(sid, nombre, items, fuente, fecha, cobertura, sucursales=0,
+                   zona="Córdoba Capital", filtro=None):
     CATALOGO.mkdir(parents=True, exist_ok=True)
+    if filtro is None:
+        filtro = ("cadena cordobesa (solo opera en Córdoba)"
+                  if fuente in ("vtex", "scrape") and sid in
+                  ("cordiez", "mariano-max", "almacor", "tadicor")
+                  else "sucursales de Córdoba Capital")
     (CATALOGO / f"{sid}.json").write_text(json.dumps({
         "meta": {"super": sid, "nombre": nombre, "fuente": fuente,
-                 "actualizado": fecha, "zona": "Córdoba Capital",
-                 "filtro": ("cadena cordobesa (solo opera en Córdoba)"
-                            if fuente in ("vtex", "scrape") and sid in
-                            ("cordiez", "mariano-max", "almacor", "tadicor")
-                            else "sucursales de Córdoba Capital"),
+                 "actualizado": fecha, "zona": zona, "filtro": filtro,
                  "sucursales": sucursales, "cobertura": cobertura,
                  "total": len(items)},
         "items": items}, ensure_ascii=False), encoding="utf-8")
@@ -612,26 +645,20 @@ def main():
             meta_supers[s["id"]] = s
 
     resumen, fecha = [], hoy
+    sepa_ids = set()
     if solo in (None, "sepa"):
         try:
             r, fecha = correr_sepa(CATALOGO, meta_supers)
             resumen += r
+            sepa_ids = {x["id"] for x in r}
         except Exception as e:
             print(f"[sepa] FALLO GENERAL: {e} (se conservan archivos previos)", flush=True)
 
-    if solo in (None, "cordiez"):
+    if solo in (None, "vtex", "cordiez"):
         try:
             base = meta_supers.get("cordiez", {}).get("api_base", "")
-            plano = vtex_full(base, max_paginas=max_pag) if base else []
-            extra = (vtex_full_categorias(base, max_cats=max_cats, max_paginas=max_pag)
-                     if base else [])
-            unidos = {o["ean"]: o for o in plano}
-            for o in extra:
-                if o["ean"] not in unidos or o["precio"] < unidos[o["ean"]]["precio"]:
-                    unidos[o["ean"]] = o
-            items = sorted(unidos.values(), key=lambda o: o["precio"])
-            print(f"[cordiez] plano={len(plano)} extra_cat={len(extra)} "
-                  f"total={len(items)}", flush=True)
+            items = vtex_cadena(base, max_cats=max_cats, max_paginas=max_pag,
+                                etiqueta="cordiez") if base else []
             if len(items) >= 50:
                 escribir_super("cordiez", "Cordiez", items, "vtex", hoy, "completa")
                 resumen.append({"id": "cordiez", "nombre": "Cordiez", "items": len(items),
@@ -644,6 +671,31 @@ def main():
             resumen.append({"id": "cordiez", "nombre": "Cordiez", "items": -1,
                             "sucursales": 0, "cobertura": "completa",
                             "fuente": "vtex", "stale": True})
+
+    if solo in (None, "vtex", "fallback"):
+        # Tiendas online que entregan en Córdoba: solo si SEPA no trajo la
+        # bandera en esta corrida (SEPA = precio de sucursal, manda).
+        for sid, base in VTEX_FALLBACK_BASES.items():
+            if sid in sepa_ids:
+                print(f"[{sid}] cubierto por SEPA, se omite fallback", flush=True)
+                continue
+            nombre = VTEX_FALLBACK_NOMBRES[sid]
+            try:
+                items = vtex_cadena(base, max_cats=max_cats, max_paginas=max_pag,
+                                    etiqueta=sid)
+                if len(items) < 50:
+                    raise RuntimeError(f"solo {len(items)} items")
+                escribir_super(sid, nombre, items, "vtex", hoy, "completa",
+                               zona=ZONA_ONLINE_CBA,
+                               filtro="tienda online oficial (entrega en Córdoba Capital)")
+                resumen.append({"id": sid, "nombre": nombre, "items": len(items),
+                                "sucursales": 0, "cobertura": "completa",
+                                "fuente": "vtex", "stale": False})
+            except Exception as e:
+                print(f"[{sid}] {e}; se conserva archivo previo", flush=True)
+                resumen.append({"id": sid, "nombre": nombre, "items": -1,
+                                "sucursales": 0, "cobertura": "completa",
+                                "fuente": "vtex", "stale": True})
 
     if solo in (None, "scrape"):
         for sid in ("mariano-max", "makro", "tadicor", "almacor", "diarco"):
@@ -691,6 +743,7 @@ def main():
                            "sucursales": m.get("sucursales", 0),
                            "cobertura": m.get("cobertura", "?"),
                            "fuente": m.get("fuente", "?"),
+                           "zona": m.get("zona", "?"),
                            "actualizado": m.get("actualizado", "?"), "stale": stale})
             total += m.get("total", 0)
         except Exception as e:
