@@ -78,6 +78,7 @@ function renderOfertas() {
   for (const g of gs) {
     const mejor = g.items[0];
     const s = superById(mejor.super);
+    const linkProd = mejor.url_producto || mejor.url_tienda;
     const div = document.createElement("div");
     div.className = "oferta";
     div.innerHTML = `
@@ -88,10 +89,11 @@ function renderOfertas() {
       </div>
       <div style="text-align:right">
         <span class="precio">${fmt(mejor.precio)}</span>
+        ${linkProd ? `<br/><a class="link-btn" href="${linkProd}" target="_blank" rel="noopener">🔗 Ver en ${s.nombre}</a>` : ""}
         <br/><button class="btn-add" data-add="${mejor.id}">➕ agregar</button>
       </div>`;
     div.onclick = (e) => {
-      if (e.target.dataset.add) return;
+      if (e.target.dataset.add || e.target.tagName === 'A') return;
       state.comparando = g.key;
       renderComparador();
     };
@@ -121,10 +123,11 @@ function renderComparador() {
   const rows = g.items.map((o, i) => {
     const s = superById(o.super);
     const dif = i === 0 ? "✅ mejor" : `+$${(o.precio - g.items[0].precio).toLocaleString("es-AR")}`;
-    return `<tr class="${i === 0 ? "mejor" : ""}"><td><span class="badge" style="background:${s.color}">${s.nombre}</span></td><td><strong>${fmt(o.precio)}</strong></td><td>${dif}</td><td><button class="btn-add" data-add="${o.id}">➕</button></td></tr>`;
+    const link = o.url_producto || o.url_tienda;
+    return `<tr class="${i === 0 ? "mejor" : ""}"><td><span class="badge" style="background:${s.color}">${s.nombre}</span></td><td><strong>${fmt(o.precio)}</strong></td><td>${dif}</td><td>${link ? `<a class="link-btn" href="${link}" target="_blank" rel="noopener">🔗 Ver</a>` : ""}</td><td><button class="btn-add" data-add="${o.id}">➕</button></td></tr>`;
   }).join("");
   box.innerHTML = `<h3>${g.producto} <span class="muted">${g.marca}</span></h3>
-    <table class="comp"><tr><th>Super</th><th>Precio</th><th>Dif.</th><th></th></tr>${rows}</table>`;
+    <table class="comp"><tr><th>Super</th><th>Precio</th><th>Dif.</th><th>Link</th><th></th></tr>${rows}</table>`;
   box.querySelectorAll("[data-add]").forEach((b) => { b.onclick = () => agregar(b.dataset.add); });
 }
 

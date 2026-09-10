@@ -464,12 +464,14 @@ def vtex_full(api_base, max_paginas=600):
                     continue
                 nombre = (p.get("productName") or "").strip()[:90]
                 marca = (p.get("brand") or "").strip()[:40] or "Varias"
+                link_text = (p.get("linkText") or "").strip()
                 if ean not in por_ean or precio < por_ean[ean]["precio"]:
                     por_ean[ean] = {"ean": ean, "producto": nombre, "marca": marca,
                                     "categoria": categorizar(nombre, marca),
                                     "precio": int(precio), "precio_lista": int(lista or precio),
                                     "precio_min": int(precio), "promo": bool(lista and lista > precio),
-                                    "leyenda": "", "suc": 1, "unidad": "", "fuente": "vtex"}
+                                    "leyenda": "", "suc": 1, "unidad": "", "fuente": "vtex",
+                                    "link_text": link_text}
                 total += 1
             except (KeyError, IndexError, TypeError):
                 continue
@@ -540,6 +542,7 @@ def vtex_full_categorias(api_base, max_cats=None, max_paginas=600):
                         continue
                     nombre = (p.get("productName") or "").strip()[:90]
                     marca = (p.get("brand") or "").strip()[:40] or "Varias"
+                    link_text = (p.get("linkText") or "").strip()
                     if ean not in por_ean or precio < por_ean[ean]["precio"]:
                         por_ean[ean] = {
                             "ean": ean, "producto": nombre, "marca": marca,
@@ -547,7 +550,8 @@ def vtex_full_categorias(api_base, max_cats=None, max_paginas=600):
                             "precio": int(precio), "precio_lista": int(lista or precio),
                             "precio_min": int(precio),
                             "promo": bool(lista and lista > precio),
-                            "leyenda": "", "suc": 1, "unidad": "", "fuente": "vtex"}
+                            "leyenda": "", "suc": 1, "unidad": "", "fuente": "vtex",
+                            "link_text": link_text}
                 except (KeyError, IndexError, TypeError):
                     continue
             if len(data) < 50:
@@ -575,6 +579,25 @@ VTEX_FALLBACK_NOMBRES = {
     "mas": "ChangoMas",
 }
 ZONA_ONLINE_CBA = "Online (entrega en Córdoba Capital)"
+
+# URLs base de tienda y patrón de producto para cada super VTEX
+VTEX_STORES = {
+    "vea": {"store": "https://www.vea.com.ar", "product": "https://www.vea.com.ar/{}/p"},
+    "disco": {"store": "https://www.disco.com.ar", "product": "https://www.disco.com.ar/{}/p"},
+    "jumbo": {"store": "https://www.jumbo.com.ar", "product": "https://www.jumbo.com.ar/{}/p"},
+    "carrefour": {"store": "https://www.carrefour.com.ar", "product": "https://www.carrefour.com.ar/{}/p"},
+    "mas": {"store": "https://www.masonline.com.ar", "product": "https://www.masonline.com.ar/{}/p"},
+    "cordiez": {"store": "https://www.cordiez.com.ar", "product": "https://www.cordiez.com.ar/{}/p"},
+}
+
+def product_url(sid, link_text):
+    """Genera URL del producto si hay link_text, sino URL de la tienda."""
+    cfg = VTEX_STORES.get(sid)
+    if cfg and link_text:
+        return cfg["product"].format(link_text)
+    if cfg:
+        return cfg["store"]
+    return ""
 
 
 def vtex_cadena(api_base, max_cats=None, max_paginas=600, etiqueta="vtex"):
@@ -915,12 +938,23 @@ def escribir_super(sid, nombre, items, fuente, fecha, cobertura, sucursales=0,
                   if fuente in ("vtex", "scrape") and sid in
                   ("cordiez", "mariano-max", "almacor", "tadicor")
                   else "sucursales de Córdoba Capital")
+    # Enriquecer items con URLs de producto y tienda
+    enriquecidos = []
+    for o in items:
+        o2 = dict(o)
+        if "link_text" in o:
+            o2["url_producto"] = product_url(sid, o["link_text"])
+            o2["url_tienda"] = VTEX_STORES.get(sid, {}).get("store", "")
+        else:
+            o2["url_producto"] = ""
+            o2["url_tienda"] = ""
+        enriquecidos.append(o2)
     (CATALOGO / f"{sid}.json").write_text(json.dumps({
         "meta": {"super": sid, "nombre": nombre, "fuente": fuente,
                  "actualizado": fecha, "zona": zona, "filtro": filtro,
                  "sucursales": sucursales, "cobertura": cobertura,
-                 "total": len(items)},
-        "items": items}, ensure_ascii=False), encoding="utf-8")
+                 "total": len(enriquecidos)},
+        "items": enriquecidos}, ensure_ascii=False), encoding="utf-8")
 
 
 def main():
