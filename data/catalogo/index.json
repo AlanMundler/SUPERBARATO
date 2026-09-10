@@ -2,10 +2,21 @@
  "actualizado": "2026-09-10",
  "zona": "Córdoba Capital (exclusivo)",
  "fuente": "sepa+vtex+scrape",
- "total_items": 2550,
- "total_supers": 1,
+ "total_items": 12746,
+ "total_supers": 5,
  "nota": "Precios de sucursales de Córdoba Capital (SEPA) + cadenas cordobesas. Nada fuera de la capital.",
  "supers": [
+  {
+   "id": "carrefour",
+   "nombre": "Carrefour Online",
+   "items": 2549,
+   "sucursales": 0,
+   "cobertura": "completa",
+   "fuente": "vtex",
+   "zona": "Online (entrega en Córdoba Capital)",
+   "actualizado": "2026-09-10",
+   "stale": false
+  },
   {
    "id": "cordiez",
    "nombre": "Cordiez",
@@ -13,6 +24,40 @@
    "sucursales": 0,
    "cobertura": "completa",
    "fuente": "vtex",
+   "zona": "Córdoba Capital",
+   "actualizado": "2026-09-10",
+   "stale": false
+  },
+  {
+   "id": "disco",
+   "nombre": "Disco",
+   "items": 2550,
+   "sucursales": 0,
+   "cobertura": "completa",
+   "fuente": "vtex",
+   "zona": "Online (entrega en Córdoba Capital)",
+   "actualizado": "2026-09-10",
+   "stale": false
+  },
+  {
+   "id": "jumbo",
+   "nombre": "Jumbo",
+   "items": 2550,
+   "sucursales": 0,
+   "cobertura": "completa",
+   "fuente": "vtex",
+   "zona": "Online (entrega en Córdoba Capital)",
+   "actualizado": "2026-09-10",
+   "stale": false
+  },
+  {
+   "id": "vea",
+   "nombre": "Vea",
+   "items": 2547,
+   "sucursales": 0,
+   "cobertura": "completa",
+   "fuente": "vtex",
+   "zona": "Online (entrega en Córdoba Capital)",
    "actualizado": "2026-09-10",
    "stale": false
   }
