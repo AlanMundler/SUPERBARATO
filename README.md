@@ -51,6 +51,10 @@ python scripts/update_precios.py --solo cordiez --max-paginas 2   # VTEX en vivo
   bandera que reporte en capital (descubrimiento dinámico). Precio publicado =
   mediana entre sucursales capitalinas.
 - **VTEX full-catalog:** Cordiez (cadena cordobesa, catálogo completo paginado).
+- **Folletos PDF (cadenas cordobesas, cobertura parcial semanal):** Almacor
+  (`mailing.pdf` con texto extraíble) y Buenos Días (`catalogo.pdf` vía visor
+  PDF.js, como es solo imágenes se procesa con OCR Tesseract spa). Si el PDF no
+  trae suficientes productos, se descarta y no se publica nada inventado.
 - **Scrape best-effort (cobertura parcial):** Mariano Max, Makro, Tadicor, Almacor, Diarco.
 - Novedad 2026: los 4 Hiper Libertad de capital (Rodríguez del Busto, Gral. Paz,
   Rivera, Sabattini) pasaron a **La Anónima**.

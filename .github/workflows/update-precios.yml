@@ -17,6 +17,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Dependencias PDF/OCR
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils tesseract-ocr tesseract-ocr-spa
+          pip install pypdf pillow pdf2image pytesseract
       - name: Correr bot de precios
         run: python scripts/update_precios.py || echo "Bot marcó stale, se conserva JSON anterior"
       - name: Commit si hubo cambios

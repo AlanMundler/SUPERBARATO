@@ -158,7 +158,7 @@ CATEGORIAS = [
                    "magdalena", "budin", "budín", "pan dulce", "rosca", "criollo",
                    "criollito", "tortita", "torta ", "bizcochuelo", "prepizza", "prepiza",
                    "pan de molde", "pan lactal", "pan rallado", "panettone", "stollen",
-                   "donut", "dona ", "churro", "bollo", "pebete", "figaza", "baguette",
+                   "donut", "churro", "bollo", "pebete", "figaza", "baguette",
                    "ciabatta", "grisines", "tostada", "tostado "]),
     ("limpieza", ["lavandina", "detergente", "limpiador", "desinfectante", "desengrasante",
                   "lustramuebles", "lavavajilla", "papel higienico", "papel higiénico",
@@ -193,7 +193,14 @@ def categorizar(descripcion, marca=""):
     t = norm((descripcion or "") + " " + (marca or ""))
     for cat, kws in CATEGORIAS:
         for kw in kws:
-            if norm(kw) in t:
+            k = norm(kw).strip()
+            if not k:
+                continue
+            if len(k) <= 4:
+                # Palabras cortas: match exacto (evita 'ajo' en 'alfajor').
+                if re.search(r"\b" + re.escape(k) + r"\b", t):
+                    return cat
+            elif k in t:
                 return cat
     return "otros"
 
@@ -613,6 +620,227 @@ def scrape_ofertas(urls):
     return []
 
 
+# ---------------------------------------------------------------- PDF (folletos)
+# Almacor publica mailing.pdf con texto extraíble; Buenos Días publica
+# catalogo.pdf como imágenes (requiere OCR). Ambas son cadenas cordobesas
+# con sucursales en capital: el folleto vigente ES su oferta en capital.
+STOP_FOLLETO = ("OFERTA", "LLEV", "COMBO", "COMPRA", "VENTA", "PROMO", "PACK",
+                "SUPER ", "PRECIO", "OFERTON", "SOLO PARA", "HASTA AGOTAR",
+                "IMAGEN", "MINIMO", "MÍNIMO", "TOPE", "REINTEGRO", "ACUMULABLE",
+                "BANCO", "BANCA", "TARJETA", "CUENTA", "APPS", "PAGA", "PAGÁ",
+                "MODO", "MERCADO PAGO", "NARANJA", "ALIMENTAR", "MEGAMIERCOLES",
+                "CORDOBESA", "DIVERSI", "CONSUMO FAMILIAR", "STOCK", "VALIDAS",
+                "VÁLIDAS", "VIGENCIA", "SUCURSAL")
+
+
+def es_marca_folleto(line):
+    t = line.strip()
+    if not (3 <= len(t) <= 32) or "$" in t or "/" in t:
+        return False
+    up = sum(1 for c in t if c.isupper())
+    al = sum(1 for c in t if c.isalpha())
+    if al < 3 or up / al < 0.7:
+        return False
+    return not any(s in t.upper() for s in STOP_FOLLETO)
+
+
+def es_ruido_folleto(line):
+    t = line.strip()
+    if not t or len(t) < 3:
+        return True
+    u = t.upper()
+    if any(s in u for s in STOP_FOLLETO):
+        return True
+    if re.fullmatch(r"[\dxX×\+\-\./%°\s]+", t):
+        return True
+    return False
+
+
+def parse_folleto_texto(texto):
+    """Máquina de estados marca -> descripción -> $precio. Devuelve
+    [(producto, marca, precio)]. El precio válido es el $ final (no s/imp)."""
+    pares = []
+    marca, desc = "", []
+    for raw in texto.splitlines():
+        line = re.sub(r"\s+", " ", raw).strip()
+        if not line:
+            continue
+        m = re.search(r"\$\s?([\d\.\,]+)", line)
+        if m and "imp" not in line.lower():
+            try:
+                pr = int(m.group(1).replace(".", "").replace(",", ""))
+            except ValueError:
+                desc = []
+                continue
+            d = " ".join(desc).strip()
+            if marca and d and len(d) >= 8 and 100 <= pr <= 1000000:
+                pares.append((marca + " " + d, marca, pr))
+            desc = []
+            continue
+        if "imp" in line.lower() and "$" in line:
+            continue  # precio sin impuestos: referencia, no es el precio
+        if es_marca_folleto(line):
+            marca = line.strip()
+            desc = []
+        elif not es_ruido_folleto(line):
+            if len(" ".join(desc)) < 160:
+                desc.append(line.strip())
+    # dedupe por (producto, precio)
+    vistos, out = set(), []
+    for prod, mar, pr in pares:
+        k = (norm(prod), pr)
+        if k not in vistos:
+            vistos.add(k)
+            out.append((prod, mar, pr))
+    return out
+
+
+def vigencia_folleto(texto):
+    m = re.search(r"del (\d{1,2}/\d{1,2}).{0,12}al (\d{1,2}/\d{1,2}(?:/\d{4})?)",
+                  texto, re.I | re.S)
+    if m:
+        return f"{m.group(1)} al {m.group(2)}"
+    m = re.search(r"(\d{1,2}/\d{1,2}).{0,12}al (\d{1,2}/\d{1,2}(?:/\d{4})?)",
+                  texto, re.I | re.S)
+    return f"{m.group(1)} al {m.group(2)}" if m else ""
+
+
+def descargar_pdf(url):
+    req = urllib.request.Request(url, headers={**VTEX_HEADERS,
+        "Referer": url.rsplit("/", 1)[0] + "/"})
+    with urllib.request.urlopen(req, timeout=90) as r:
+        data = r.read()
+    if not data.startswith(b"%PDF"):
+        raise RuntimeError("no es PDF")
+    return data
+
+
+def pdf_a_texto(pdf_bytes):
+    from pypdf import PdfReader
+    r = PdfReader(io.BytesIO(pdf_bytes))
+    return "\n".join([(p.extract_text() or "") for p in r.pages])
+
+
+def descubrir_pdfs(home_url, minimo=1):
+    """Busca links .pdf de catálogo/folleto en la home (los nombres rotan)."""
+    try:
+        html = fetch(home_url, VTEX_HEADERS, timeout=25).decode("utf-8", errors="replace")
+    except Exception:
+        return []
+    cands = []
+    for href in re.findall(r'href="([^"]+\.pdf[^"]*)"', html, re.I):
+        u = href if href.startswith("http") else home_url.rstrip("/") + "/" + href.lstrip("/")
+        prio = 0 if re.search(r"catalogo|mailing|folleto|oferta", href, re.I) else 1
+        cands.append((prio, u))
+    return [u for _, u in sorted(cands)][:4]
+
+
+def ocr_pdf_a_texto(pdf_bytes, dpi=200):
+    """Rasteriza el PDF y aplica OCR spa. Reconstruye renglones por
+    proximidad vertical y devuelve texto plano por líneas."""
+    from pdf2image import convert_from_bytes
+    import pytesseract
+    out_lines = []
+    for img in convert_from_bytes(pdf_bytes, dpi=dpi, fmt="jpeg"):
+        d = pytesseract.image_to_data(img, lang="spa",
+                                      output_type=pytesseract.Output.DICT)
+        words = []
+        for i, txt in enumerate(d["text"]):
+            try:
+                conf = int(float(d["conf"][i]))
+            except (ValueError, TypeError):
+                continue
+            txt = (txt or "").strip()
+            if conf < 30 or not txt:
+                continue
+            words.append((d["top"][i], d["left"][i], txt))
+        words.sort()
+        lines, cur, cur_top = [], [], None
+        for top, left, txt in words:
+            if cur_top is None or abs(top - cur_top) > 12:
+                if cur:
+                    lines.append(cur)
+                cur, cur_top = [], top
+            cur.append((left, txt))
+        if cur:
+            lines.append(cur)
+        for ws in lines:
+            ws.sort(key=lambda w: w[0])
+            out_lines.append(" ".join(w for _, w in ws))
+    return "\n".join(out_lines)
+
+
+PDF_FUENTES = {
+    "almacor": {
+        "nombre": "Almacor",
+        "urls": ["https://almacor.com.ar/catalogo/mailing.pdf"],
+        "descubrir": "https://www.almacor.com.ar/",
+        "modo": "texto", "min": 10,
+        "filtro": "cadena cordobesa: folleto semanal vigente",
+    },
+    "buenos-dias": {
+        "nombre": "Buenos Días",
+        "urls": ["https://novedades.superbuenosdias.com/catalogo/web/catalogo.pdf"],
+        "descubrir": "https://superbuenosdias.ar/",
+        "modo": "ocr", "min": 20,
+        "filtro": "cadena cordobesa: catálogo semanal vigente (OCR)",
+    },
+}
+
+
+def correr_pdf(meta_supers, hoy):
+    resumen = []
+    for sid, cfg in PDF_FUENTES.items():
+        nombre = cfg["nombre"]
+        try:
+            data, usada = None, ""
+            urls = list(cfg["urls"]) + descubrir_pdfs(cfg["descubrir"])
+            for u in urls:
+                try:
+                    data = descargar_pdf(u)
+                    usada = u
+                    break
+                except Exception as e:
+                    print(f"  [pdf:{sid}] {u}: {str(e)[:80]}", flush=True)
+            if not data:
+                raise RuntimeError("sin PDF descargable")
+            if cfg["modo"] == "texto":
+                texto = pdf_a_texto(data)
+                if len(texto.strip()) < 500:
+                    raise RuntimeError("PDF sin texto (es imagen?)")
+            else:
+                texto = ocr_pdf_a_texto(data)
+            vig = vigencia_folleto(texto)
+            pares = parse_folleto_texto(texto)
+            print(f"  [pdf:{sid}] {usada} pares={len(pares)} vigencia={vig}", flush=True)
+            if len(pares) < cfg["min"]:
+                raise RuntimeError(f"solo {len(pares)} pares (min {cfg['min']})")
+            vistos = {}
+            for t, mar, pr in pares:
+                k = norm(t)
+                if k not in vistos or pr < vistos[k]["precio"]:
+                    vistos[k] = {
+                        "ean": "PDF-" + re.sub(r"[^A-Z0-9]+", "-", norm(t))[:45],
+                        "producto": t[:90], "marca": mar[:40] or "Oferta",
+                        "categoria": categorizar(t, mar),
+                        "precio": pr, "precio_lista": pr, "precio_min": pr,
+                        "promo": True,
+                        "leyenda": ("Folleto vigente " + vig) if vig else "Folleto vigente",
+                        "suc": 1, "unidad": "", "fuente": "pdf"}
+            items = sorted(vistos.values(), key=lambda o: o["precio"])
+            escribir_super(sid, nombre, items, "pdf", hoy, "parcial (folleto)",
+                           zona="Córdoba Capital", filtro=cfg["filtro"])
+            resumen.append({"id": sid, "nombre": nombre, "items": len(items),
+                            "sucursales": 0, "cobertura": "parcial (folleto)",
+                            "fuente": "pdf", "stale": False})
+        except Exception as e:
+            print(f"[pdf:{sid}] {e}; se conserva archivo previo", flush=True)
+            resumen.append({"id": sid, "nombre": nombre, "items": -1,
+                            "sucursales": 0, "cobertura": "parcial (folleto)",
+                            "fuente": "pdf", "stale": True})
+    return resumen
+
+
 # ---------------------------------------------------------------- main
 def escribir_super(sid, nombre, items, fuente, fecha, cobertura, sucursales=0,
                    zona="Córdoba Capital", filtro=None):
@@ -696,6 +924,12 @@ def main():
                 resumen.append({"id": sid, "nombre": nombre, "items": -1,
                                 "sucursales": 0, "cobertura": "completa",
                                 "fuente": "vtex", "stale": True})
+
+    if solo in (None, "pdf"):
+        try:
+            resumen += correr_pdf(meta_supers, hoy)
+        except Exception as e:
+            print(f"[pdf] FALLO GENERAL: {e}", flush=True)
 
     if solo in (None, "scrape"):
         for sid in ("mariano-max", "makro", "tadicor", "almacor", "diarco"):

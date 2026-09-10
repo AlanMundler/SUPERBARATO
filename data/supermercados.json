@@ -159,10 +159,10 @@
     "nombre": "Almacor",
     "color": "#2e7d3a",
     "tipo": "cordobes",
-    "fuente": "scrape",
+    "fuente": "pdf",
     "web": "https://www.almacor.com.ar",
     "sucursales_cordoba": ["Córdoba Capital — ver sucursales en almacor.com.ar"],
-    "notas": "Cadena cordobesa. Sin API pública: monitoreo best-effort (cobertura parcial)."
+    "notas": "Cadena cordobesa: se extrae su folleto semanal mailing.pdf (texto)."
   },
   {
     "id": "diarco",
@@ -173,5 +173,15 @@
     "web": "https://www.diarco.com.ar",
     "sucursales_cordoba": ["Córdoba Capital — ver sucursales en diarco.com.ar"],
     "notas": "Mayorista/minorista. Sin API pública estable: monitoreo best-effort (cobertura parcial)."
+  },
+  {
+    "id": "buenos-dias",
+    "nombre": "Buenos Días",
+    "color": "#1b7f3b",
+    "tipo": "cordobes",
+    "fuente": "pdf",
+    "web": "https://superbuenosdias.ar",
+    "sucursales_cordoba": ["Sarmiento 2050", "Bv. San Juan 560", "Av. Vélez Sarsfield 6551"],
+    "notas": "Cadena cordobesa (~29 locales): se extrae su catálogo semanal catalogo.pdf con OCR."
   }
 ]
