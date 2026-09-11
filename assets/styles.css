@@ -82,7 +82,7 @@ button { font-family: var(--font); touch-action: manipulation; }
 .chip.active .n { color: var(--acc-ink); }
 
 /* ---------- vistas: una pantalla, scroll interno ---------- */
-main.wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+main.wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; isolation: isolate; }
 .view { display: none; flex: 1; min-height: 0; flex-direction: column; overflow: hidden; }
 .view.active { display: flex; }
 .scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 12px; }
@@ -135,8 +135,12 @@ main.wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; overf
 
 /* ---------- tabbar inferior (patrón OnsenUI ons-tabbar) ---------- */
 .tabbar {
-  flex-shrink: 0; height: var(--tabbar-h); background: var(--card);
+  flex-shrink: 0; height: var(--tabbar-h); background: var(--card); position: relative; z-index: 10;
   border-top: 2px solid var(--line); display: flex; padding-bottom: env(safe-area-inset-bottom);
+}
+.diag-out {
+  white-space: pre-wrap; font-size: 0.72rem; background: var(--paper);
+  border: 2px solid var(--line); border-radius: 12px; padding: 8px; margin: 8px 0 0;
 }
 .tab {
   flex: 1; min-width: 0; border: none; background: none; color: var(--muted);
@@ -179,6 +183,10 @@ main.wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; overf
 /* ---------- lista / reco / fuentes ---------- */
 .card { background: var(--card); border: 2px solid var(--line); border-radius: var(--radius); padding: 12px; margin: 8px 0; min-width: 0; }
 .hscroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x mandatory; }
+/* Lista vertical a prueba de todo: nada puede montarse sobre nada. */
+.vstack { display: flex; flex-direction: column; gap: 6px; }
+.vstack .reco { max-width: none; width: auto; flex-direction: row; align-items: center; }
+.vstack .reco-win { margin-left: auto; text-align: right; }
 .reco { scroll-snap-align: start; flex: 0 0 auto; width: max-content; max-width: 240px; background: var(--acc-soft); border: 2px solid var(--acc); border-radius: 14px; padding: 8px 10px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 2px; justify-content: center; min-width: 0; overflow: hidden; }
 .reco-cat { font-weight: 800; font-size: 0.95rem; white-space: nowrap; }
 .reco-win { font-size: 0.82rem; overflow-wrap: anywhere; min-width: 0; }
