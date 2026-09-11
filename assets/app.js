@@ -42,12 +42,12 @@ function debounce(fn, ms) {
 }
 
 let toastTimer = null;
-function toast(msg) {
+function toast(msg, ms) {
   const el = $("toast");
   el.textContent = msg;
   el.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.hidden = true; }, 2200);
+  toastTimer = setTimeout(() => { el.hidden = true; }, ms || 2200);
 }
 
 function grupoKey(o) {
@@ -814,7 +814,20 @@ async function init() {
     }
   } catch (e) { /* link inválido, se ignora */ }
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").then((reg) => {
+        reg.addEventListener("updatefound", () => {
+          const w = reg.installing;
+          if (!w) return;
+          w.addEventListener("statechange", () => {
+            if (w.state === "installed" && navigator.serviceWorker.controller) {
+              w.postMessage("SKIP_WAITING");
+              toast("✨ Nueva versión lista: recargá la página", 6000);
+            }
+          });
+        });
+      }).catch(() => {});
+    });
   }
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();

@@ -1,5 +1,5 @@
 /* SUPERBARATO SW: cachea el shell (html/css/js), los datos siempre de red. */
-const CACHE = "superbarato-v1";
+const CACHE = "superbarato-v2";
 const SHELL = ["./", "index.html", "assets/app.js", "assets/styles.css", "manifest.json"];
 
 self.addEventListener("install", (e) => {
@@ -12,6 +12,10 @@ self.addEventListener("activate", (e) => {
       .then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
+});
+
+self.addEventListener("message", (e) => {
+  if (e.data === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("fetch", (e) => {
