@@ -2,7 +2,7 @@
  "actualizado": "2026-09-11",
  "zona": "Córdoba Capital (exclusivo)",
  "fuente": "sepa+vtex+scrape",
- "total_items": 15768,
+ "total_items": 15769,
  "total_supers": 8,
  "nota": "Precios de sucursales de Córdoba Capital (SEPA) + cadenas cordobesas. Nada fuera de la capital.",
  "supers": [
@@ -31,7 +31,7 @@
   {
    "id": "cordiez",
    "nombre": "Cordiez",
-   "items": 2549,
+   "items": 2550,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
