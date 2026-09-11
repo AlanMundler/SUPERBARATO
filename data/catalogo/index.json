@@ -2,7 +2,7 @@
  "actualizado": "2026-09-11",
  "zona": "Córdoba Capital (exclusivo)",
  "fuente": "sepa+vtex+scrape",
- "total_items": 15769,
+ "total_items": 15768,
  "total_supers": 8,
  "nota": "Precios de sucursales de Córdoba Capital (SEPA) + cadenas cordobesas. Nada fuera de la capital.",
  "supers": [
@@ -15,7 +15,7 @@
    "fuente": "pdf",
    "zona": "Córdoba Capital",
    "actualizado": "2026-09-11",
-   "stale": false
+   "stale": true
   },
   {
    "id": "carrefour",
@@ -42,7 +42,7 @@
   {
    "id": "disco",
    "nombre": "Disco",
-   "items": 2550,
+   "items": 2549,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
