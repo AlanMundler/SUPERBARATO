@@ -331,6 +331,25 @@ function renderListas() {
     b.onclick = () => { quitar(b.dataset.del); renderBar(); toast("Quitado de la lista"); };
   });
 }
+// Canasta básica en un toque: agrega lo esencial y muestra
+// en qué super conviene comprar cada cosa.
+const CANASTA_BASICA = ["yerba", "leche", "pan", "pollo", "fideos", "arroz",
+  "aceite", "queso", "tomate", "papa", "shampoo", "detergente"];
+function armarCanasta() {
+  let agregados = 0;
+  for (const q of CANASTA_BASICA) {
+    const toks = normTxt(q).split(/\s+/).filter(Boolean);
+    const g = [...state.idx.byKey.values()].find((gr) => {
+      const hay = normTxt(gr.producto + " " + gr.marca);
+      return toks.every((t) => hay.includes(t));
+    });
+    if (g) { state.lista.push(g.items[0].id); agregados++; }
+  }
+  guardar();
+  renderBar();
+  toast(agregados ? `Canasta armada: ${agregados} productos ✅` : "No encontré productos");
+  document.getElementById("listas").scrollIntoView({ behavior: "smooth" });
+}
 function metaLink(superId) {
   const m = state.supersMeta.find((s) => s.id === superId);
   return (m && m.web) || "";
@@ -451,6 +470,7 @@ async function init() {
   $("btn-cerrar-comp").onclick = () => { state.comparando = null; renderComparador(false); };
 
   $("btn-limpiar").onclick = () => { state.lista = []; guardar(); renderBar(); toast("Lista vaciada"); };
+  $("btn-canasta").onclick = armarCanasta;
   $("btn-copiar").onclick = copiarLista;
   $("btn-wa").onclick = () => { window.open("https://wa.me/?text=" + encodeURIComponent(textoLista()), "_blank"); };
   $("lista-bar").onclick = () => { document.getElementById("listas").scrollIntoView({ behavior: "smooth" }); };

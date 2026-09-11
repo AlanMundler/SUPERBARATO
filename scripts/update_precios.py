@@ -134,7 +134,8 @@ CATEGORIAS = [
                  "energizante", "monster", "speed", "red bull", "sidra", "champagne",
                  "champaña", "fernet", "vodka", "ron", "whisky", "licor", "amargo",
                  "aperitivo", "gancia", " sidra", "tónica", "tonica", "levite", "aquarius",
-                 "powerade", "gatorade", "te frio", "té frío", "mate listo"]),
+                 "powerade", "gatorade", "te frio", "té frío", "mate listo", "agua",
+                 "bebida"]),
     ("carniceria", ["asado", "vacio", "vacío", "matambre", "nalga", "cuadril", "lomo",
                     "carne picada", "pollo", "pata muslo", "pechuga", "suprema", "cerdo",
                     "bondiola", "chorizo", "morcilla", "salchicha", "viena", "milanesa",
@@ -165,6 +166,7 @@ CATEGORIAS = [
                   "rollo de cocina", "servilleta", "bolsa de residuo", "bolsa de consorcio",
                   "trapo", "rejilla", "escoba", "cloro", "suavizante", "quitamanchas",
                   "cif", "ayudin", "magistral", "ala jabon", "drive", "skip", "lysoform",
+                  "bolsa",
                   "esponja", "fibras", "guantes de limpieza", "balde", "lampazo", "plumero"]),
     ("perfumeria", ["shampoo", "acondicionador", "jabon de tocador", "jabon liquido",
                     "jabon", "crema corporal", "crema facial", "desodorante",
@@ -188,7 +190,8 @@ CATEGORIAS = [
                  "coctel de frutas", "leche condensada", "crema de mani",
                  "caramelo", "chupetin", "chicle", "gomita", "turron",
                  "alfajor", "bombon", "golosina", "malvavisco", "oblea",
-                 "en lata", "enlatado"]),
+                 "en lata", "enlatado", "saborizador", "malvadisco", "pochoclo",
+                 "ñoqui", "chips", "pepa", "frita"]),
 ]
 
 
@@ -206,8 +209,9 @@ def _hits(t, cat, kws):
         if cat == "lacteos" and k == "leche" and "dulce de leche" in t:
             continue  # "alfajor con dulce de leche" es golosina, no lácteo
         if len(k) <= 4:
-            # Palabras cortas: match exacto (evita 'ajo' en 'alfajor').
-            if re.search(r"\b" + re.escape(k) + r"\b", t):
+            # Palabras cortas: match exacto, plural opcional
+            # (evita 'ajo' en 'alfajor'; permite 'pepas', 'uvas').
+            if re.search(r"\b" + re.escape(k) + r"S?\b", t):
                 n += 1
         elif k in t:
             n += 1
@@ -217,12 +221,24 @@ def _hits(t, cat, kws):
 def categorizar(descripcion, marca=""):
     t = norm((descripcion or "") + " " + (marca or ""))
     por_nombre = dict(CATEGORIAS)
-    mejor, mejor_n = "otros", 0
+    # Fase 1: todo menos verdulería. Un tomate en lata o una mermelada de
+    # frutilla son almacén aunque nombren una fruta/verdura.
+    mejor, mejor_n = None, 0
     for cat in PRIORIDAD_CATEGORIAS:
+        if cat == "verduleria":
+            continue
         n = _hits(t, cat, por_nombre.get(cat, []))
         if n > mejor_n:
             mejor, mejor_n = cat, n
-    return mejor
+    if mejor:
+        return mejor
+    # Fase 2: "sabor X" = producto saborizado (agua, yogur bebible, caldo),
+    # nunca verdura fresca. (norm() devuelve mayúsculas: literal en mayús.)
+    if re.search(r"\bSABOR", t):
+        return "otros"
+    if _hits(t, "verduleria", por_nombre.get("verduleria", [])) > 0:
+        return "verduleria"
+    return "otros"
 
 
 # ---------------------------------------------------------------- SEPA
@@ -1142,6 +1158,17 @@ def selftest():
     assert categorizar("Choclo en lata 300 gr") == "almacen"
     assert categorizar("Alfajor de chocolate 50 gr") == "almacen"
     assert categorizar("Alfajor negro relleno con dulce de leche 60 gr") == "almacen"
+    # Auditoría 2 (2026-09-11): "sabor a fruta" no es verdulería.
+    assert categorizar("Agua Sabor Manzana 500 cc") == "bebidas"
+    assert categorizar("Actimel sabor naranja 100 gr") == "otros"
+    assert categorizar("Dulce de batata 500 g") == "almacen"
+    assert categorizar("Galletas Mini Limon 180 gr") == "almacen"
+    assert categorizar("Tomate triturado en lata 500 gr") == "almacen"
+    assert categorizar("Limon x kg") == "verduleria"
+    assert categorizar("Shampoo Sandia Kids 350 cc") == "perfumeria"
+    assert categorizar("Pepas Batata 300 gr") == "almacen"
+    assert categorizar("Batatas Fritas 75 gr") == "almacen"
+    assert categorizar("Batata Por Kg") == "verduleria"
 
     com = ("id_comercio|id_bandera|bandera_descripcion\n"
            "9|1|Vea\n9|2|Disco\n")
