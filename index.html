@@ -3,8 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SUPERBARATO — Lo más barato de Córdoba Capital</title>
-  <meta name="description" content="Buscá un producto y te decimos dónde está más barato en Córdoba Capital, y en qué super comprar cada cosa de tu lista." />
+  <title>SUPERBARATO Córdoba: compará precios de supermercados y ahorrá</title>
+  <meta name="description" content="Compará precios de Vea, Disco, Jumbo, Carrefour, ChangoMás, Cordiez y más en Córdoba Capital. Cazá ofertas, armá tu lista inteligente y enterate cuando bajan los precios. Gratis, sin registro." />
+  <link rel="canonical" href="https://alanmundler.github.io/SUPERBARATO/" />
+  <meta name="theme-color" content="#15803d" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="SUPERBARATO — Lo más barato de Córdoba Capital" />
+  <meta property="og:description" content="Compará precios entre supers, cazá ofertas y armá tu lista inteligente. Gratis." />
+  <meta property="og:url" content="https://alanmundler.github.io/SUPERBARATO/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" />
@@ -14,7 +23,7 @@
   <header class="top">
     <div class="wrap">
       <div class="brand-row">
-        <p class="brand">🛒 SUPERBARATO</p>
+        <h1 class="brand">🛒 SUPERBARATO</h1>
         <p id="meta-linea" class="meta">Cargando precios…</p>
         <select id="filtro-super" aria-label="Filtrar por supermercado">
           <option value="">🏪 Todos</option>
@@ -39,9 +48,21 @@
       <button id="btn-mas" class="big-btn ghost" hidden>Ver más baratos ↓</button>
     </section>
 
+    <section id="view-ofertas" class="view" aria-label="Ofertas" hidden>
+      <p class="results-meta">Las mayores rebajas de hoy, de todos los supers.</p>
+      <div id="caza-lista" class="cards scroll"></div>
+    </section>
+
     <section id="view-lista" class="view" aria-label="Mi lista" hidden>
+      <div id="alertas-box"></div>
+      <section class="card">
+        <h2>⭐ Mis favoritos</h2>
+        <p class="muted">Guardá lo que comprás siempre y te aviso si baja.</p>
+        <div id="favs-lista"></div>
+      </section>
       <div class="lista-actions">
         <button id="btn-canasta">🧺 Canasta básica</button>
+        <button id="btn-compartir">🔗 Compartir</button>
         <button id="btn-copiar">📋 Copiar</button>
         <button id="btn-wa">💬 WhatsApp</button>
         <button id="btn-limpiar" class="danger">🗑 Vaciar</button>
@@ -52,7 +73,10 @@
     <section id="view-mas" class="view" aria-label="Más info" hidden>
       <div class="scroll">
         <section class="card">
-          <h2>Lo mejor de cada super</h2>
+          <h2>⚙️ Ajustes</h2>
+          <div class="ajuste-row"><button id="btn-tema">🌓 Modo oscuro: no</button></div>
+          <div class="ajuste-row"><button id="btn-instalar" hidden>📲 Instalar app</button></div>
+        </section>
           <p class="muted">Elegí un super y mirá sus mejores ofertas.</p>
           <div id="mejor-chips" class="chips"></div>
           <div id="mejor-lista" class="shelf"></div>
@@ -75,6 +99,7 @@
 
   <nav class="tabbar" aria-label="Navegación principal">
     <button id="tab-buscar" class="tab active" aria-current="page">🔍<span>Buscar</span></button>
+    <button id="tab-ofertas" class="tab">🔥<span>Ofertas</span></button>
     <button id="tab-lista" class="tab">🧾<span>Mi lista</span><em id="tab-badge" class="tab-badge" hidden></em></button>
     <button id="tab-mas" class="tab">ℹ️<span>Más</span></button>
   </nav>

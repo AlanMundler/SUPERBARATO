@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://alanmundler.github.io/SUPERBARATO/sitemap.xml

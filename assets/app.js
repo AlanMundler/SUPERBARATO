@@ -17,6 +17,7 @@ const state = {
   orden: "precio",
   mejorSuper: null,
   cartSuper: null,
+  favs: [],
   lista: JSON.parse(localStorage.getItem("superbarato-lista") || "[]"),
   idx: null, // { byKey: Map, byId: Map }
 };
@@ -50,7 +51,8 @@ function toast(msg) {
 }
 
 function grupoKey(o) {
-  return (o.ean ? "E" + o.ean : "N" + normTxt(o.producto + "||" + o.marca));
+  const base = o.ean ? "E" + o.ean : "N" + normTxt(o.producto + "||" + o.marca);
+  return base.replace(/"/g, "");
 }
 
 // Índice construido UNA vez: grupos ordenados + mapa id->oferta
@@ -144,6 +146,7 @@ function cardHTML(g) {
       ${ppuTxt(mejor)}
       <button class="btn-add" data-add="${mejor.id}" aria-label="Agregar ${g.producto} a mi lista">➕</button>
       ${link ? `<a class="link-btn" href="${link}" target="_blank" rel="noopener">🔗 Ver</a>` : ""}
+      <button class="btn-fav${state.favs.includes(g.key) ? " on" : ""}" data-fav="${g.key}" aria-label="Guardar en favoritos" aria-pressed="${state.favs.includes(g.key)}">⭐</button>
     </div>`;
 }
 
@@ -169,11 +172,11 @@ function renderOfertas() {
       const div = document.createElement("article");
       div.className = "card-prod";
       div.innerHTML = cardHTML(g);
-      div.onclick = (e) => {
-        if (e.target.closest("[data-add]") || e.target.closest("a")) return;
-        state.comparando = g.key;
-        renderComparador();
-      };
+    div.onclick = (e) => {
+      if (e.target.closest("[data-add]") || e.target.closest("[data-fav]") || e.target.closest("a")) return;
+      state.comparando = g.key;
+      renderComparador();
+    };
       box.appendChild(div);
     }
     box.querySelectorAll("[data-add]").forEach((b) => {
@@ -297,6 +300,115 @@ function renderMejor() {
   });
 }
 
+// ---- Favoritos + alertas de baja (sin registro, todo local) ----
+function toggleFav(key) {
+  const i = state.favs.indexOf(key);
+  if (i >= 0) { state.favs.splice(i, 1); toast("Quitado de favoritos"); }
+  else { state.favs.push(key); toast("Guardado en favoritos ⭐"); }
+  localStorage.setItem("superbarato-favs", JSON.stringify(state.favs));
+  document.querySelectorAll("[data-fav]").forEach((b) => {
+    const on = state.favs.includes(b.dataset.fav);
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", on);
+  });
+  renderFavs();
+}
+function renderFavs() {
+  const box = $("favs-lista");
+  if (!box) return;
+  const gs = state.favs.map((k) => state.idx.byKey.get(k)).filter(Boolean);
+  if (!gs.length) { box.innerHTML = '<p class="muted">Tocá ⭐ en lo que compres siempre.</p>'; return; }
+  box.innerHTML = "";
+  for (const g of gs) {
+    const mejor = g.items[0];
+    const s = superById(mejor.super);
+    const div = document.createElement("article");
+    div.className = "card-prod";
+    div.innerHTML = `
+      <div class="emoji" aria-hidden="true">${catIcono(g.categoria)}</div>
+      <div class="prod-body">
+        <p class="prod-name">${g.producto}</p>
+        <p class="prod-sub">${g.marca}</p>
+        <span class="badge" style="background:${s.color}">${s.nombre}</span>
+      </div>
+      <div class="prod-side">
+        <span class="precio">${fmt(mejor.precio)}</span>
+        <button class="btn-add" data-add="${mejor.id}" aria-label="Agregar ${g.producto} a mi lista">➕</button>
+        <button class="btn-fav on" data-fav="${g.key}" aria-label="Quitar de favoritos" aria-pressed="true">⭐</button>
+      </div>`;
+    box.appendChild(div);
+  }
+  box.querySelectorAll("[data-add]").forEach((b) => {
+    b.onclick = () => agregar(b.dataset.add);
+  });
+}
+function checkAlertas() {
+  let snap = {};
+  try { snap = JSON.parse(localStorage.getItem("superbarato-snap") || "{}"); } catch (e) { snap = {}; }
+  const bajas = [];
+  for (const key of state.favs) {
+    const g = state.idx.byKey.get(key);
+    if (!g) continue;
+    const best = g.items[0].precio;
+    const prev = snap[key];
+    if (prev && typeof prev.p === "number" && best < prev.p) {
+      bajas.push({ g, antes: prev.p, ahora: best });
+    }
+    snap[key] = { p: best, f: state.meta.actualizado || "" };
+  }
+  localStorage.setItem("superbarato-snap", JSON.stringify(snap));
+  const box = $("alertas-box");
+  if (!box) return;
+  box.innerHTML = bajas.length ? `<div class="ahorro-banner">🔻 Bajaron ${bajas.length} de tus favoritos</div>` +
+    bajas.map(({ g, antes, ahora }) => {
+      const s = superById(g.items[0].super);
+      return `<div class="reco"><strong>${g.producto}</strong>Ahora ${fmt(ahora)} en ${s.nombre} (antes ${fmt(antes)})</div>`;
+    }).join("") : "";
+}
+
+// ---- Cazaofertas: mayores rebajas en $ de hoy ----
+function renderCaza() {
+  const box = $("caza-lista");
+  if (!box) return;
+  const gs = grupos()
+    .map((g) => ({ g, off: g.items[0].precio_lista > g.items[0].precio ? g.items[0].precio_lista - g.items[0].precio : 0 }))
+    .filter((x) => x.off > 0)
+    .sort((a, b) => b.off - a.off)
+    .slice(0, 60);
+  if (!gs.length) { box.innerHTML = '<p class="muted">Hoy no hay rebajas marcadas.</p>'; return; }
+  box.innerHTML = "";
+  for (const { g, off } of gs) {
+    const mejor = g.items[0];
+    const s = superById(mejor.super);
+    const link = mejor.url_producto || mejor.url_tienda;
+    const div = document.createElement("article");
+    div.className = "card-prod";
+    div.innerHTML = `
+      <div class="emoji" aria-hidden="true">${catIcono(g.categoria)}</div>
+      <div class="prod-body">
+        <p class="prod-name">${g.producto}</p>
+        <p class="prod-sub">${g.marca} · ahorrás ${fmt(off)}</p>
+        <span class="badge" style="background:${s.color}">${s.nombre}</span>
+      </div>
+      <div class="prod-side">
+        <span class="precio">${fmt(mejor.precio)}</span>
+        ${precioOriginal(mejor)}
+        <button class="btn-add" data-add="${mejor.id}" aria-label="Agregar ${g.producto} a mi lista">➕</button>
+        ${link ? `<a class="link-btn" href="${link}" target="_blank" rel="noopener">🔗 Ver</a>` : ""}
+        <button class="btn-fav${state.favs.includes(g.key) ? " on" : ""}" data-fav="${g.key}" aria-label="Guardar en favoritos">⭐</button>
+      </div>`;
+    div.onclick = (e) => {
+      if (e.target.closest("[data-add]") || e.target.closest("[data-fav]") || e.target.closest("a")) return;
+      state.comparando = g.key;
+      renderComparador();
+    };
+    box.appendChild(div);
+  }
+  box.querySelectorAll("[data-add]").forEach((b) => {
+    b.onclick = (e) => { e.stopPropagation(); agregar(b.dataset.add); };
+  });
+}
+
 function renderFuentes() {  const box = $("fuentes-lista");
   if (!box || !state.supersIdx.length) { if (box) box.innerHTML = '<p class="muted">Datos de ejemplo.</p>'; return; }
   box.innerHTML = state.supersIdx.map((s) => {
@@ -309,7 +421,7 @@ function renderFuentes() {  const box = $("fuentes-lista");
 // ---- Navegación por pestañas: todo entra en una pantalla ----
 function showView(nombre) {
   state.vista = nombre;
-  for (const v of ["buscar", "lista", "mas"]) {
+  for (const v of ["buscar", "ofertas", "lista", "mas"]) {
     document.getElementById("view-" + v).hidden = v !== nombre;
     document.getElementById("view-" + v).classList.toggle("active", v === nombre);
     const tab = document.getElementById("tab-" + v);
@@ -324,6 +436,13 @@ function updateTabBadge() {
   const b = $("tab-badge");
   b.hidden = !n;
   b.textContent = n > 99 ? "99+" : String(n);
+}
+function applyTheme() {
+  const t = localStorage.getItem("superbarato-theme") ||
+    (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.dataset.theme = t;
+  const b = $("btn-tema");
+  if (b) b.textContent = `🌓 Modo oscuro: ${t === "dark" ? "sí" : "no"}`;
 }
 
 // ---- Lista inteligente: qué comprar en cada super ----
@@ -435,19 +554,24 @@ function renderListas() {
     }
     html += "</ul></div>";
   }
-  // ¿Y si quiero ir a UN solo super? Ranking de los que tienen TODO lo de mi lista
+  // ¿Y si quiero ir a UN solo super? Tabla completa estilo MyGroceryPal:
+  // tu lista cotizada en TODOS los supers, completos primero.
   const presentes = [...new Set(state.ofertas.map((o) => o.super))];
   const single = [];
+  const tabla = [];
   for (const sid of presentes) {
-    let total = 0, falta = 0;
+    let total = 0, tiene = 0;
     for (const key of claves) {
       const g = state.idx.byKey.get(key);
       const o = g ? g.items.find((x) => x.super === sid) : null;
-      if (o) total += o.precio;
-      else falta++;
+      if (o) { total += o.precio; tiene++; }
     }
+    if (!tiene) continue;
+    const falta = claves.size - tiene;
+    tabla.push({ sid, total, tiene, falta });
     if (!falta && total > 0) single.push({ sid, total });
   }
+  tabla.sort((a, b) => (a.falta - b.falta) || (a.total - b.total));
   single.sort((a, b) => a.total - b.total);
   if (single.length) {
     html += `<h3>Si preferís ir a un solo lugar…</h3>`;
@@ -457,6 +581,15 @@ function renderListas() {
       html += `<div class="reco"><strong>🛒 Todo en ${s.nombre}: ${fmt(total)}</strong>` +
         `${extra > 0 ? `(+${fmt(extra)} vs repartir)` : "(igual que el óptimo 🎉)"}</div>`;
     }
+  }
+  if (tabla.length > 1) {
+    html += `<h3>Tu lista en cada super</h3><div class="tabla-canasta">` +
+      tabla.map((t, i) => {
+        const s = superById(t.sid);
+        return `<div class="fila-canasta${i === 0 ? " mejor" : ""}"><span class="badge" style="background:${s.color}">${s.nombre}</span>` +
+          `<span><strong>${fmt(t.total)}</strong> <span class="muted">${t.tiene}/${claves.size}${t.falta ? ` · faltan ${t.falta}` : " · completa 🎉"}</span></span>` +
+          `${i === 0 ? `<span class="comp-dif win">gana</span>` : ""}</div>`;
+      }).join("") + `</div>`;
   }
   const clavesArr = [...claves];
   const cob = cartDatos(clavesArr);
@@ -480,7 +613,7 @@ function renderListas() {
   setAccionesLista(true);
 }
 function setAccionesLista(hay) {
-  for (const id of ["btn-copiar", "btn-wa", "btn-limpiar"]) {
+  for (const id of ["btn-copiar", "btn-wa", "btn-limpiar", "btn-compartir"]) {
     const b = $(id);
     if (b) b.disabled = !hay;
   }
@@ -521,19 +654,31 @@ function textoLista() {
   }
   return lineas.join("\n");
 }
+function fallbackCopy(texto, done) {
+  const ta = document.createElement("textarea");
+  ta.value = texto;
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch (e) { /* sin portapapeles */ }
+  ta.remove();
+  done();
+}
 async function copiarLista() {
   const t = textoLista();
+  const done = () => toast("Lista copiada ✅");
   try {
     await navigator.clipboard.writeText(t);
+    done();
   } catch (e) {
-    const ta = document.createElement("textarea");
-    ta.value = t;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    ta.remove();
+    fallbackCopy(t, done);
   }
-  toast("Lista copiada ✅");
+}
+function compartirLista() {
+  if (!state.lista.length) { toast("Tu lista está vacía"); return; }
+  const url = location.origin + location.pathname + "?l=" + btoa(JSON.stringify(state.lista));
+  const done = () => toast("Link copiado, compartilo ✅");
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(done).catch(() => fallbackCopy(url, done));
+  else fallbackCopy(url, done);
 }
 
 function setBusqueda(v) {
@@ -599,6 +744,7 @@ async function init() {
   ]);
   state.supersMeta = supers;
   state.categorias = cats;
+  try { state.favs = JSON.parse(localStorage.getItem("superbarato-favs") || "[]"); } catch (e) { state.favs = []; }
 
   try {
     state.ofertas = await cargarCatalogo();
@@ -632,10 +778,16 @@ async function init() {
   $("btn-limpiar").onclick = () => { state.lista = []; guardar(); renderBar(); toast("Lista vaciada"); };
   $("btn-canasta").onclick = () => { armarCanasta(); showView("lista"); };
   $("btn-copiar").onclick = copiarLista;
+  $("btn-compartir").onclick = compartirLista;
   $("btn-wa").onclick = () => { window.open("https://wa.me/?text=" + encodeURIComponent(textoLista()), "_blank"); };
   $("tab-buscar").onclick = () => showView("buscar");
+  $("tab-ofertas").onclick = () => { showView("ofertas"); renderCaza(); };
   $("tab-lista").onclick = () => showView("lista");
   $("tab-mas").onclick = () => showView("mas");
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest ? e.target.closest("[data-fav]") : null;
+    if (b) { e.stopPropagation(); toggleFav(b.dataset.fav); }
+  });
   const setOrden = (modo) => {
     state.orden = modo;
     $("ord-precio").classList.toggle("active", modo === "precio");
@@ -645,7 +797,41 @@ async function init() {
   $("ord-precio").onclick = () => setOrden("precio");
   $("ord-ppu").onclick = () => setOrden("ppu");
 
-  renderMeta(); renderTabs(); renderOfertas(); renderRecos(); renderMejor(); renderFuentes(); renderListas(); renderBar(); showView("buscar");
+  renderMeta(); renderTabs(); renderOfertas(); renderRecos(); renderMejor(); renderFuentes(); renderListas(); renderBar(); renderFavs(); checkAlertas(); applyTheme(); showView("buscar");
+  try {
+    const q = new URLSearchParams(location.search).get("l");
+    if (q) {
+      const ids = JSON.parse(atob(q));
+      if (Array.isArray(ids) && ids.length) {
+        state.lista = ids.filter((id) => state.idx.byId.get(id));
+        guardar();
+        renderBar();
+        toast(`Te compartieron ${state.lista.length} productos ✅`);
+        showView("lista");
+        history.replaceState(null, "", location.pathname);
+      }
+    }
+  } catch (e) { /* link inválido, se ignora */ }
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+  }
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    window.__sbInstall = e;
+    $("btn-instalar").hidden = false;
+  });
+  $("btn-instalar").onclick = async () => {
+    if (window.__sbInstall) {
+      window.__sbInstall.prompt();
+      window.__sbInstall = null;
+      $("btn-instalar").hidden = true;
+    }
+  };
+  $("btn-tema").onclick = () => {
+    const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    localStorage.setItem("superbarato-theme", t);
+    applyTheme();
+  };
 }
 
 init().catch((e) => {

@@ -21,6 +21,18 @@
   --tabbar-h: 60px;
   --font: "Ubuntu", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
+html[data-theme="dark"] {
+  --paper: #141a12;
+  --card: #1e2618;
+  --ink: #eef3e6;
+  --muted: #a3a798;
+  --line: #333d28;
+  --acc: #4ade80;
+  --acc-ink: #052e16;
+  --acc-soft: #17351f;
+  --link: #7db8f0;
+  --strip: #1c2a3a;
+}
 * { box-sizing: border-box; }
 html, body { overflow: hidden; overscroll-behavior: none; }
 body {
@@ -185,7 +197,24 @@ main.wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; overf
 .super-grupo li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 0.87rem; min-width: 0; }
 .super-grupo li .t { flex: 1; min-width: 0; }
 .super-grupo li .p { font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tabla-canasta { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 12px; }
+.fila-canasta {
+  display: flex; align-items: center; gap: 8px; background: var(--card);
+  border: 2px solid var(--line); border-radius: 12px; padding: 8px 10px; font-size: 0.9rem;
+}
+.fila-canasta.mejor { border-color: var(--acc); }
+.fila-canasta .comp-dif { margin-left: auto; }
 .btn-del { min-width: 40px; min-height: 40px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); font-size: 1rem; cursor: pointer; flex-shrink: 0; }
+.btn-fav {
+  min-width: 40px; min-height: 40px; border-radius: 12px; border: 2px solid var(--line);
+  background: var(--card); font-size: 1rem; cursor: pointer; flex-shrink: 0; filter: grayscale(1); opacity: 0.6;
+}
+.btn-fav.on { filter: none; opacity: 1; border-color: var(--sun, #fbbf24); }
+.ajuste-row { margin: 8px 0; }
+.ajuste-row button {
+  width: 100%; min-height: 48px; font-size: 0.95rem; font-weight: 700; border-radius: 14px;
+  border: 2px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer;
+}
 details.card summary { cursor: pointer; min-height: 48px; }
 details.card summary h2 { display: inline; font-size: 1.1rem; }
 .fuente-row { border-left: 4px solid var(--acc); padding: 8px 10px; margin: 8px 0; background: var(--acc-soft); border-radius: 0 10px 10px 0; font-size: 0.85rem; }

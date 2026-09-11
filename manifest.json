@@ -1,0 +1,19 @@
+{
+  "name": "SUPERBARATO — Lo más barato de Córdoba Capital",
+  "short_name": "SUPERBARATO",
+  "description": "Compará precios de supermercados en Córdoba Capital. Cazá ofertas y armá tu lista inteligente.",
+  "start_url": "https://alanmundler.github.io/SUPERBARATO/",
+  "scope": "https://alanmundler.github.io/SUPERBARATO/",
+  "display": "standalone",
+  "background_color": "#faf6ee",
+  "theme_color": "#15803d",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
