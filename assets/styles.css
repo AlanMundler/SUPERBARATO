@@ -179,8 +179,9 @@ main.wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; overf
 /* ---------- lista / reco / fuentes ---------- */
 .card { background: var(--card); border: 2px solid var(--line); border-radius: var(--radius); padding: 12px; margin: 8px 0; min-width: 0; }
 .hscroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x mandatory; }
-.reco { scroll-snap-align: start; flex: 0 0 auto; max-width: 220px; background: var(--acc-soft); border: 2px solid var(--acc); border-radius: 14px; padding: 8px 10px; font-size: 0.85rem; }
-.reco strong { display: block; font-size: 1rem; }
+.reco { scroll-snap-align: start; flex: 0 0 auto; max-width: 190px; background: var(--acc-soft); border: 2px solid var(--acc); border-radius: 14px; padding: 8px 10px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 2px; justify-content: center; }
+.reco-cat { font-weight: 800; font-size: 0.95rem; white-space: nowrap; }
+.reco-win { white-space: nowrap; font-size: 0.82rem; }
 .lista-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; flex-shrink: 0; }
 .lista-actions button {
   flex: 1 1 40%; min-height: 44px; font-size: 0.88rem; font-weight: 700; border-radius: 14px;

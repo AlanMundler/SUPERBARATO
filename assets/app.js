@@ -240,7 +240,8 @@ function renderRecos() {
     const s = superById(superId);
     const d = document.createElement("div");
     d.className = "reco";
-    d.innerHTML = `<strong>${c.icono} ${c.nombre}</strong>Conviene <strong>${s.nombre}</strong> · ${Number(n).toLocaleString("es-AR")} más baratos`;
+    d.innerHTML = `<span class="reco-cat">${c.icono} ${c.nombre}</span>` +
+      `<span class="reco-win">→ <strong>${s.nombre}</strong> · ${Number(n).toLocaleString("es-AR")}</span>`;
     box.appendChild(d);
   }
   if (!box.children.length) box.innerHTML = '<p class="muted">Todavía no hay datos para recomendar.</p>';
