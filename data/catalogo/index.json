@@ -2,7 +2,7 @@
  "actualizado": "2026-09-10",
  "zona": "Córdoba Capital (exclusivo)",
  "fuente": "sepa+vtex+scrape",
- "total_items": 15736,
+ "total_items": 14678,
  "total_supers": 8,
  "nota": "Precios de sucursales de Córdoba Capital (SEPA) + cadenas cordobesas. Nada fuera de la capital.",
  "supers": [
@@ -20,7 +20,7 @@
   {
    "id": "carrefour",
    "nombre": "Carrefour Online",
-   "items": 2549,
+   "items": 2546,
    "sucursales": 0,
    "cobertura": "completa",
    "fuente": "vtex",
@@ -31,7 +31,7 @@
   {
    "id": "cordiez",
    "nombre": "Cordiez",
-   "items": 2517,
+   "items": 2550,
    "sucursales": 0,
    "cobertura": "completa",
    "fuente": "vtex",
@@ -42,7 +42,7 @@
   {
    "id": "disco",
    "nombre": "Disco",
-   "items": 2550,
+   "items": 1499,
    "sucursales": 0,
    "cobertura": "completa",
    "fuente": "vtex",
@@ -53,7 +53,7 @@
   {
    "id": "jumbo",
    "nombre": "Jumbo",
-   "items": 2550,
+   "items": 2549,
    "sucursales": 0,
    "cobertura": "completa",
    "fuente": "vtex",
@@ -75,7 +75,7 @@
   {
    "id": "mas",
    "nombre": "ChangoMas",
-   "items": 2550,
+   "items": 2523,
    "sucursales": 0,
    "cobertura": "completa",
    "fuente": "vtex",
@@ -86,7 +86,7 @@
   {
    "id": "vea",
    "nombre": "Vea",
-   "items": 2550,
+   "items": 2541,
    "sucursales": 0,
    "cobertura": "completa",
    "fuente": "vtex",
