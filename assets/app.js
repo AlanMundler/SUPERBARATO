@@ -14,6 +14,8 @@ const state = {
   comparando: null,
   visibles: 60,
   vista: "buscar",
+  orden: "precio",
+  mejorSuper: null,
   lista: JSON.parse(localStorage.getItem("superbarato-lista") || "[]"),
   idx: null, // { byKey: Map, byId: Map }
 };
@@ -80,7 +82,15 @@ function grupos() {
     if (!items.length) continue;
     out.push({ key: g.key, producto: g.producto, marca: g.marca, categoria: g.categoria, items });
   }
-  out.sort((a, b) => a.items[0].precio - b.items[0].precio);
+  if (state.orden === "ppu") {
+    const minPpu = (g) => {
+      const v = g.items.filter((o) => o.ppu).map((o) => o.ppu);
+      return v.length ? Math.min(...v) : Infinity;
+    };
+    out.sort((a, b) => minPpu(a) - minPpu(b));
+  } else {
+    out.sort((a, b) => a.items[0].precio - b.items[0].precio);
+  }
   return out;
 }
 
@@ -109,6 +119,9 @@ function renderTabs() {
   }
 }
 
+function ppuTxt(o) {
+  return o.ppu ? `<span class="ppu">${fmt(o.ppu)}/${o.punidad || "un"}</span>` : "";
+}
 function cardHTML(g) {
   const mejor = g.items[0];
   const s = superById(mejor.super);
@@ -122,6 +135,7 @@ function cardHTML(g) {
     </div>
     <div class="prod-side">
       <span class="precio">${fmt(mejor.precio)}</span>
+      ${ppuTxt(mejor)}
       <button class="btn-add" data-add="${mejor.id}" aria-label="Agregar ${g.producto} a mi lista">➕</button>
       ${link ? `<a class="link-btn" href="${link}" target="_blank" rel="noopener">🔗 Ver</a>` : ""}
     </div>`;
@@ -179,6 +193,7 @@ function renderComparador() {
     return `<div class="comp-row${i === 0 ? " mejor" : ""}">
       <span class="badge" style="background:${s.color}">${s.nombre}</span>
       <span class="precio">${fmt(o.precio)}</span>
+      ${ppuTxt(o)}
       <span class="comp-dif${i === 0 ? " win" : ""}">${dif}</span>
       <span class="comp-actions">
         ${link ? `<a class="link-btn" href="${link}" target="_blank" rel="noopener">🔗 Ver</a>` : ""}
@@ -217,8 +232,61 @@ function renderRecos() {
   if (!box.children.length) box.innerHTML = '<p class="muted">Todavía no hay datos para recomendar.</p>';
 }
 
-function renderFuentes() {
-  const box = $("fuentes-lista");
+// Lo mejor de cada super: top promos y baratos de un super elegido
+function renderMejor() {
+  const chips = $("mejor-chips");
+  const box = $("mejor-lista");
+  if (!chips || !box) return;
+  const supers = state.supersIdx.length ? state.supersIdx
+    : [...new Set(state.ofertas.map((o) => o.super))].map((id) => ({ id, nombre: superById(id).nombre }));
+  if (!supers.length) { box.innerHTML = '<p class="muted">Todavía no hay datos.</p>'; return; }
+  if (!state.mejorSuper || !supers.some((s) => s.id === state.mejorSuper)) {
+    state.mejorSuper = supers[0].id;
+  }
+  chips.innerHTML = "";
+  for (const s of supers) {
+    const meta = superById(s.id);
+    const b = document.createElement("button");
+    b.className = "chip" + (s.id === state.mejorSuper ? " active" : "");
+    b.innerHTML = `<span class="badge" style="background:${meta.color || "#6f6e63"}">${s.nombre}</span>`;
+    b.setAttribute("aria-pressed", s.id === state.mejorSuper ? "true" : "false");
+    b.onclick = () => { state.mejorSuper = s.id; renderMejor(); };
+    chips.appendChild(b);
+  }
+  const items = state.ofertas.filter((o) => o.super === state.mejorSuper);
+  const scored = items.map((o) => ({
+    o, desc: (o.precio_lista > o.precio) ? (o.precio_lista - o.precio) : 0,
+  }));
+  scored.sort((a, b) => (b.desc - a.desc) || (a.o.precio - b.o.precio));
+  const top = scored.slice(0, 10);
+  if (!top.length) { box.innerHTML = '<p class="muted">Sin productos.</p>'; return; }
+  box.innerHTML = "";
+  for (const { o, desc } of top) {
+    const s = superById(o.super);
+    const link = o.url_producto || o.url_tienda;
+    const div = document.createElement("article");
+    div.className = "card-prod";
+    div.innerHTML = `
+      <div class="emoji" aria-hidden="true">${catIcono(o.categoria)}</div>
+      <div class="prod-body">
+        <p class="prod-name">${o.producto}</p>
+        <p class="prod-sub">${o.marca}${desc > 0 ? ` · ahorrás ${fmt(desc)}` : ""}</p>
+        <span class="badge" style="background:${s.color}">${s.nombre}</span>
+      </div>
+      <div class="prod-side">
+        <span class="precio">${fmt(o.precio)}</span>
+        ${ppuTxt(o)}
+        <button class="btn-add" data-add="${o.id}" aria-label="Agregar ${o.producto} a mi lista">➕</button>
+        ${link ? `<a class="link-btn" href="${link}" target="_blank" rel="noopener">🔗 Ver</a>` : ""}
+      </div>`;
+    box.appendChild(div);
+  }
+  box.querySelectorAll("[data-add]").forEach((b) => {
+    b.onclick = () => agregar(b.dataset.add);
+  });
+}
+
+function renderFuentes() {  const box = $("fuentes-lista");
   if (!box || !state.supersIdx.length) { if (box) box.innerHTML = '<p class="muted">Datos de ejemplo.</p>'; return; }
   box.innerHTML = state.supersIdx.map((s) => {
     const meta = superById(s.id);
@@ -436,6 +504,7 @@ async function cargarCatalogo() {
         super: s.id, precio: o.precio, precio_lista: o.precio_lista || o.precio,
         promo: !!o.promo, suc: o.suc || 1,
         url_producto: o.url_producto || "", url_tienda: o.url_tienda || "",
+        ppu: o.ppu || null, punidad: o.punidad || "",
       }));
     } catch (e) {
       hechos++;
@@ -501,8 +570,16 @@ async function init() {
   $("tab-buscar").onclick = () => showView("buscar");
   $("tab-lista").onclick = () => showView("lista");
   $("tab-mas").onclick = () => showView("mas");
+  const setOrden = (modo) => {
+    state.orden = modo;
+    $("ord-precio").classList.toggle("active", modo === "precio");
+    $("ord-ppu").classList.toggle("active", modo === "ppu");
+    renderOfertas();
+  };
+  $("ord-precio").onclick = () => setOrden("precio");
+  $("ord-ppu").onclick = () => setOrden("ppu");
 
-  renderMeta(); renderTabs(); renderOfertas(); renderRecos(); renderFuentes(); renderListas(); renderBar(); showView("buscar");
+  renderMeta(); renderTabs(); renderOfertas(); renderRecos(); renderMejor(); renderFuentes(); renderListas(); renderBar(); showView("buscar");
 }
 
 init().catch((e) => {

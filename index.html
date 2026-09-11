@@ -30,6 +30,10 @@
   <main class="wrap">
     <section id="view-buscar" class="view active" aria-label="Buscar">
       <p id="resultados-meta" class="results-meta" aria-live="polite"></p>
+      <div class="orden-row" role="group" aria-label="Ordenar productos">
+        <button id="ord-precio" class="chip sm active">💰 Precio</button>
+        <button id="ord-ppu" class="chip sm">⚖️ $/kg · $/L</button>
+      </div>
       <div id="ofertas-lista" class="cards scroll"></div>
       <button id="btn-mas" class="big-btn ghost" hidden>Ver más baratos ↓</button>
     </section>
@@ -46,6 +50,12 @@
 
     <section id="view-mas" class="view" aria-label="Más info" hidden>
       <div class="scroll">
+        <section class="card">
+          <h2>Lo mejor de cada super</h2>
+          <p class="muted">Elegí un super y mirá sus mejores ofertas.</p>
+          <div id="mejor-chips" class="chips"></div>
+          <div id="mejor-lista"></div>
+        </section>
         <section class="card">
           <h2>Dónde conviene ir</h2>
           <div id="reco-lista" class="hscroll"></div>

@@ -242,6 +242,25 @@ def categorizar(descripcion, marca=""):
 
 
 # ---------------------------------------------------------------- SEPA
+def ppu_desde(precio, cantidad, unidad):
+    """Precio por unidad base (kg/L/un). Devuelve (ppu, 'kg'|'l'|'un')
+    o (None, '') si no se puede normalizar."""
+    if not precio or not cantidad or cantidad <= 0:
+        return None, ""
+    u = norm(unidad).replace(".", "")
+    if u in ("KG", "KILO", "KILOS", "K"):
+        return round(precio / cantidad, 2), "kg"
+    if u in ("G", "GR", "GRS", "GRM", "GRAMO", "GRAMOS"):
+        return round(precio / cantidad * 1000, 2), "kg"
+    if u in ("L", "LT", "LTS", "LITRO", "LITROS"):
+        return round(precio / cantidad, 2), "l"
+    if u in ("ML", "CC", "CM3"):
+        return round(precio / cantidad * 1000, 2), "l"
+    if u in ("UN", "U", "UNI", "UNID", "UNIDAD", "UNIDADES", "PZA", "PZAS"):
+        return round(precio / cantidad, 2), "un"
+    return None, ""
+
+
 def sepa_url_hoy():
     art = datetime.utcnow() - timedelta(hours=3)  # hora argentina, sin DST
     js_dow = (art.weekday() + 1) % 7  # lun=0..dom=6 -> dom=0..sab=6
@@ -338,15 +357,21 @@ class Agregador:
     def __init__(self):
         self.d = {}
 
-    def add(self, bandera, ean, desc, marca, unidad, lista, efectivo, promo, leyenda, suc):
+    def add(self, bandera, ean, desc, marca, unidad, lista, efectivo, promo, leyenda, suc,
+              ppu=None, punidad=""):
         k = (bandera, ean)
         r = self.d.get(k)
         if r is None:
             r = self.d[k] = {"d": desc, "m": marca, "u": unidad, "vals": [],
-                             "listas": [], "sucs": set(), "promo": 0, "ley": ""}
+                             "listas": [], "sucs": set(), "promo": 0, "ley": "",
+                             "ppus": [], "pu": ""}
         r["vals"].append(efectivo)
         r["listas"].append(lista)
         r["sucs"].add(suc)
+        if ppu:
+            r["ppus"].append(ppu)
+            if not r["pu"]:
+                r["pu"] = punidad
         if promo:
             r["promo"] += 1
             if not r["ley"] and leyenda:
@@ -376,10 +401,12 @@ def procesar_productos_csv(text, comercio, capital_set, ag, stats):
             continue
         efectivo = promo if (promo and promo > 0) else lista
         stats["filas_capital"] += 1
+        ppu, pun = ppu_desde(efectivo, to_num(f[11]) if len(f) > 11 else None,
+                             f[12] if len(f) > 12 else "")
         ag.add(ban, ean, (f[5] or "").strip()[:90], (f[8] or "").strip()[:40] or "Varias",
                (f[7] or "").strip()[:10], lista, efectivo,
                bool(promo and promo > 0), (f[14] or "").strip()[:80] if len(f) > 14 else "",
-               suc)
+               suc, ppu, pun)
         keep += 1
         n += 1
     return n, keep
@@ -395,12 +422,16 @@ def build_items(ag):
         midl = len(listas) // 2
         pl = listas[midl] if len(listas) % 2 else (listas[midl - 1] + listas[midl]) / 2
         nombre = r["d"] or ean
+        ppus = sorted(r["ppus"])
+        midp = len(ppus) // 2
+        ppu_med = (ppus[midp] if len(ppus) % 2 else (ppus[midp - 1] + ppus[midp]) / 2) if ppus else None
         items[ban].append({
             "ean": ean, "producto": nombre, "marca": r["m"],
             "categoria": categorizar(nombre, r["m"]),
             "precio": int(round(precio)), "precio_lista": int(round(pl)),
             "precio_min": int(round(vals[0])), "promo": r["promo"] > 0,
             "leyenda": r["ley"], "suc": len(r["sucs"]), "unidad": r["u"],
+            "ppu": round(ppu_med, 2) if ppu_med else None, "punidad": r["pu"],
             "fuente": "sepa",
         })
     for v in items.values():
@@ -472,9 +503,14 @@ def correr_sepa(out_dir, meta_supers):
     return resumen, fecha
 
 
-# ---------------------------------------------------------------- VTEX full
+# ---------------------------------------------------------------- VTEX plano
+# NOTA (2026-09-11): se eliminó el recorrido por categorías (vtex_arbol):
+# en la práctica devolvía 0 items extra en todas las corridas y con
+# catálogos grandes (MAS: 3022 categorías) colgaba el job por horas.
+# El plano trae ~2550 productos por cadena. Mejora futura: sharding por ft.
 def vtex_full(api_base, max_paginas=600):
     por_ean, page, total = {}, 0, 0
+    completo = True
     while page < max_paginas:
         a, b = page * 50, page * 50 + 49
         try:
@@ -482,6 +518,8 @@ def vtex_full(api_base, max_paginas=600):
             data = json.loads(raw.decode("utf-8", errors="replace"))
         except Exception as e:
             print(f"  [vtex] pag {page}: {str(e)[:100]} (corte)", flush=True)
+            if page > 0:
+                completo = False  # cortó con páginas llenas: puede haber más
             break
         if not isinstance(data, list) or not data:
             break
@@ -501,13 +539,16 @@ def vtex_full(api_base, max_paginas=600):
                 nombre = (p.get("productName") or "").strip()[:90]
                 marca = (p.get("brand") or "").strip()[:40] or "Varias"
                 link_text = (p.get("linkText") or "").strip()
+                sku0 = items[0] if items else {}
+                ppu, pun = ppu_desde(precio, to_num(sku0.get("unitMultiplier")),
+                                     sku0.get("measurementUnit") or "")
                 if ean not in por_ean or precio < por_ean[ean]["precio"]:
                     por_ean[ean] = {"ean": ean, "producto": nombre, "marca": marca,
                                     "categoria": categorizar(nombre, marca),
                                     "precio": int(precio), "precio_lista": int(lista or precio),
                                     "precio_min": int(precio), "promo": bool(lista and lista > precio),
                                     "leyenda": "", "suc": 1, "unidad": "", "fuente": "vtex",
-                                    "link_text": link_text}
+                                    "link_text": link_text, "ppu": ppu, "punidad": pun}
                 total += 1
             except (KeyError, IndexError, TypeError):
                 continue
@@ -516,86 +557,9 @@ def vtex_full(api_base, max_paginas=600):
             break
         page += 1
         time.sleep(0.3)
-    return sorted(por_ean.values(), key=lambda o: o["precio"])
-
-
-def vtex_arbol(api_base):
-    """Lista de rutas de categoría ['Carnes', 'Carnes/Vacuna', ...] del árbol VTEX."""
-    host = api_base.split("/api/")[0]
-    raw = fetch(f"{host}/api/catalog_system/pub/category/tree/3",
-                VTEX_HEADERS, timeout=30)
-    tree = json.loads(raw.decode("utf-8", errors="replace"))
-    rutas = []
-
-    def caminar(nodos, pref):
-        for n in nodos:
-            ruta = pref + [n.get("name", "")]
-            rutas.append("/".join(ruta))
-            caminar(n.get("children") or [], ruta)
-
-    caminar(tree, [])
-    return [r for r in rutas if r]
-
-
-def vtex_full_categorias(api_base, max_cats=None, max_paginas=600):
-    """Catálogo completo recorriendo cada categoría (evita el tope de offset
-    del search plano). Si el árbol falla, usa el paginado plano."""
-    import urllib.parse
-    try:
-        rutas = vtex_arbol(api_base)
-        print(f"  [vtex] arbol: {len(rutas)} categorias", flush=True)
-    except Exception as e:
-        print(f"  [vtex] arbol fallo ({str(e)[:80]}), sin extras por categoria", flush=True)
-        return []
-    if max_cats:
-        rutas = rutas[:max_cats]
-    por_ean = {}
-    for ruta in rutas:
-        fq = "fq=" + urllib.parse.quote("C:/" + ruta + "/", safe="/:")
-        page = 0
-        while page < max_paginas:
-            a, b = page * 50, page * 50 + 49
-            try:
-                raw = fetch(f"{api_base}?{fq}&_from={a}&_to={b}",
-                            VTEX_HEADERS, timeout=30)
-                data = json.loads(raw.decode("utf-8", errors="replace"))
-            except Exception:
-                break
-            if not isinstance(data, list) or not data:
-                break
-            for p in data:
-                try:
-                    items = p.get("items") or []
-                    sellers = (items[0].get("sellers") or []) if items else []
-                    offer = (sellers[0].get("commertialOffer") or {}) if sellers else {}
-                    precio = offer.get("Price") or offer.get("price")
-                    if not precio:
-                        continue
-                    lista = offer.get("ListPrice") or offer.get("listPrice") or precio
-                    ean = ((items[0].get("ean") or "") if items else "") or p.get("productId", "")
-                    ean = str(ean).strip()
-                    if not ean:
-                        continue
-                    nombre = (p.get("productName") or "").strip()[:90]
-                    marca = (p.get("brand") or "").strip()[:40] or "Varias"
-                    link_text = (p.get("linkText") or "").strip()
-                    if ean not in por_ean or precio < por_ean[ean]["precio"]:
-                        por_ean[ean] = {
-                            "ean": ean, "producto": nombre, "marca": marca,
-                            "categoria": categorizar(nombre, marca),
-                            "precio": int(precio), "precio_lista": int(lista or precio),
-                            "precio_min": int(precio),
-                            "promo": bool(lista and lista > precio),
-                            "leyenda": "", "suc": 1, "unidad": "", "fuente": "vtex",
-                            "link_text": link_text}
-                except (KeyError, IndexError, TypeError):
-                    continue
-            if len(data) < 50:
-                break
-            page += 1
-            time.sleep(0.2)
-        print(f"  [vtex] {ruta}: {len(por_ean)} únicos acumulados", flush=True)
-    return sorted(por_ean.values(), key=lambda o: o["precio"])
+    if page >= max_paginas:
+        completo = False  # tope de seguridad con páginas llenas
+    return sorted(por_ean.values(), key=lambda o: o["precio"]), completo
 
 
 # Cadenas con tienda online (verificadas 2026-09-10: search 206 OK).
@@ -636,19 +600,11 @@ def product_url(sid, link_text):
     return ""
 
 
-def vtex_cadena(api_base, max_cats=None, max_paginas=600, etiqueta="vtex"):
-    """Unión plano + categorías (el plano solo llega al tope de offset)."""
-    plano = vtex_full(api_base, max_paginas=max_paginas)
-    extra = vtex_full_categorias(api_base, max_cats=max_cats,
-                                 max_paginas=max_paginas)
-    unidos = {o["ean"]: o for o in plano}
-    for o in extra:
-        if o["ean"] not in unidos or o["precio"] < unidos[o["ean"]]["precio"]:
-            unidos[o["ean"]] = o
-    items = sorted(unidos.values(), key=lambda o: o["precio"])
-    print(f"[{etiqueta}] plano={len(plano)} extra_cat={len(extra)} "
-          f"total={len(items)}", flush=True)
-    return items
+def vtex_cadena(api_base, max_paginas=600, etiqueta="vtex"):
+    """Catálogo VTEX vía paginado plano. Devuelve (items, completo)."""
+    items, completo = vtex_full(api_base, max_paginas=max_paginas)
+    print(f"[{etiqueta}] total={len(items)} completo={completo}", flush=True)
+    return items, completo
 
 
 # ---------------------------------------------------------------- scrape
@@ -999,7 +955,6 @@ def main():
         return selftest()
     solo = args[args.index("--solo") + 1] if "--solo" in args else None
     max_pag = int(args[args.index("--max-paginas") + 1]) if "--max-paginas" in args else 600
-    max_cats = int(args[args.index("--max-cats") + 1]) if "--max-cats" in args else None
     hoy = (datetime.utcnow() - timedelta(hours=3)).date().isoformat()
 
     meta_supers = {}
@@ -1020,12 +975,13 @@ def main():
     if solo in (None, "vtex", "cordiez"):
         try:
             base = meta_supers.get("cordiez", {}).get("api_base", "")
-            items = vtex_cadena(base, max_cats=max_cats, max_paginas=max_pag,
-                                etiqueta="cordiez") if base else []
+            items, completo = (vtex_cadena(base, max_paginas=max_pag, etiqueta="cordiez")
+                               if base else ([], False))
+            cob = "completa" if completo else "parcial (tope API)"
             if len(items) >= 50:
-                escribir_super("cordiez", "Cordiez", items, "vtex", hoy, "completa")
+                escribir_super("cordiez", "Cordiez", items, "vtex", hoy, cob)
                 resumen.append({"id": "cordiez", "nombre": "Cordiez", "items": len(items),
-                                "sucursales": 0, "cobertura": "completa",
+                                "sucursales": 0, "cobertura": cob,
                                 "fuente": "vtex", "stale": False})
             else:
                 raise RuntimeError(f"solo {len(items)} items")
@@ -1047,15 +1003,15 @@ def main():
                 continue
             nombre = VTEX_FALLBACK_NOMBRES[sid]
             try:
-                items = vtex_cadena(base, max_cats=max_cats, max_paginas=max_pag,
-                                    etiqueta=sid)
+                items, completo = vtex_cadena(base, max_paginas=max_pag, etiqueta=sid)
                 if len(items) < 50:
                     raise RuntimeError(f"solo {len(items)} items")
-                escribir_super(sid, nombre, items, "vtex", hoy, "completa",
+                cob = "completa" if completo else "parcial (tope API)"
+                escribir_super(sid, nombre, items, "vtex", hoy, cob,
                                zona=ZONA_ONLINE_CBA,
                                filtro="tienda online oficial (entrega en Córdoba Capital)")
                 resumen.append({"id": sid, "nombre": nombre, "items": len(items),
-                                "sucursales": 0, "cobertura": "completa",
+                                "sucursales": 0, "cobertura": cob,
                                 "fuente": "vtex", "stale": False})
             except Exception as e:
                 print(f"[{sid}] {e}; se conserva archivo previo", flush=True)
@@ -1140,6 +1096,11 @@ def main():
 # ---------------------------------------------------------------- selftest
 def selftest():
     print("[selftest] fixture SEPA + categorizador", flush=True)
+    assert ppu_desde(1500, 500, "g") == (3000.0, "kg")
+    assert ppu_desde(2000, 2, "L") == (1000.0, "l")
+    assert ppu_desde(750, 250, "ml") == (3000.0, "l")
+    assert ppu_desde(500, 0, "un") == (None, "")
+    assert ppu_desde(999, 1, "xyz") == (None, "")
     assert categorizar("Yerba Mate Taragüí 1kg") == "almacen"
     assert categorizar("Leche entera La Serenísima") == "lacteos"
     assert categorizar("Asado de novillo x kg") == "carniceria"
@@ -1200,6 +1161,8 @@ def selftest():
     assert yerba["categoria"] == "almacen" and yerba["promo"] is True
     leche = items[2][0]
     assert leche["precio"] == 1400 and leche["categoria"] == "lacteos"
+    assert yerba["ppu"] == 4850.0 and yerba["punidad"] == "kg", yerba
+    assert leche["ppu"] == 1400.0 and leche["punidad"] == "l", leche
     print("[selftest] TODO OK: filtro capital estricto + medianas + categorías", flush=True)
     return 0
 
