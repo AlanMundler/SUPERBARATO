@@ -122,6 +122,10 @@ function renderTabs() {
 function ppuTxt(o) {
   return o.ppu ? `<span class="ppu">${fmt(o.ppu)}/${o.punidad || "un"}</span>` : "";
 }
+function precioOriginal(o) {
+  return (o.precio_lista > o.precio)
+    ? `<span class="tachado">${fmt(o.precio_lista)}</span>` : "";
+}
 function cardHTML(g) {
   const mejor = g.items[0];
   const s = superById(mejor.super);
@@ -135,6 +139,7 @@ function cardHTML(g) {
     </div>
     <div class="prod-side">
       <span class="precio">${fmt(mejor.precio)}</span>
+      ${precioOriginal(mejor)}
       ${ppuTxt(mejor)}
       <button class="btn-add" data-add="${mejor.id}" aria-label="Agregar ${g.producto} a mi lista">➕</button>
       ${link ? `<a class="link-btn" href="${link}" target="_blank" rel="noopener">🔗 Ver</a>` : ""}
@@ -186,15 +191,20 @@ function renderComparador() {
   const g = state.idx.byKey.get(state.comparando);
   if (!g) { modal.hidden = true; return; }
   modal.hidden = false;
-  box.innerHTML = `<h3>${g.producto} <span class="muted">${g.marca}</span></h3>` + g.items.map((o, i) => {
+  // Filtro estricto: con un super elegido, solo precios de ese super.
+  const items = state.superFiltro ? g.items.filter((o) => o.super === state.superFiltro) : g.items;
+  if (!items.length) { modal.hidden = true; return; }
+  const tituloSuper = state.superFiltro ? ` <span class="muted">en ${superById(state.superFiltro).nombre}</span>` : "";
+  box.innerHTML = `<h3>${g.producto} <span class="muted">${g.marca}</span>${tituloSuper}</h3>` + items.map((o, i) => {
     const s = superById(o.super);
-    const dif = i === 0 ? "✅ mejor precio" : `+$${(o.precio - g.items[0].precio).toLocaleString("es-AR")}`;
+    const dif = state.superFiltro ? "" : (i === 0 ? "✅ mejor precio" : `+$${(o.precio - items[0].precio).toLocaleString("es-AR")}`);
     const link = o.url_producto || o.url_tienda;
     return `<div class="comp-row${i === 0 ? " mejor" : ""}">
       <span class="badge" style="background:${s.color}">${s.nombre}</span>
       <span class="precio">${fmt(o.precio)}</span>
+      ${precioOriginal(o)}
       ${ppuTxt(o)}
-      <span class="comp-dif${i === 0 ? " win" : ""}">${dif}</span>
+      ${dif ? `<span class="comp-dif${i === 0 ? " win" : ""}">${dif}</span>` : ""}
       <span class="comp-actions">
         ${link ? `<a class="link-btn" href="${link}" target="_blank" rel="noopener">🔗 Ver</a>` : ""}
         <button class="btn-add" data-add="${o.id}" aria-label="Agregar de ${s.nombre}">➕</button>

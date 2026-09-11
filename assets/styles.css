@@ -41,24 +41,24 @@ button { font-family: var(--font); touch-action: manipulation; }
 .meta { margin: 0; color: var(--muted); font-size: 0.66rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .search-row { display: flex; gap: 6px; align-items: stretch; margin-top: 5px; }
 #buscador {
-  flex: 1; min-width: 0; min-height: 40px; font-size: 0.95rem; padding: 6px 10px;
+  flex: 1; min-width: 0; min-height: 36px; font-size: 0.9rem; padding: 5px 10px;
   border-radius: 12px; border: 2px solid var(--line); background: var(--paper); color: var(--ink);
 }
 #buscador:focus { outline: 3px solid var(--acc); outline-offset: 1px; border-color: var(--acc); }
 .icon-btn {
-  min-width: 40px; min-height: 40px; font-size: 1.05rem; border-radius: 12px;
+  min-width: 36px; min-height: 36px; font-size: 1rem; border-radius: 12px;
   border: 2px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; flex-shrink: 0;
 }
 .filter-row { margin-top: 5px; }
 #filtro-super {
-  width: 100%; min-height: 36px; font-size: 0.82rem; border-radius: 10px;
+  width: 100%; min-height: 32px; font-size: 0.78rem; border-radius: 10px;
   border: 2px solid var(--line); background: var(--card); color: var(--ink); padding: 0 10px;
 }
 .chips { display: flex; gap: 6px; overflow-x: auto; padding: 6px 2px 2px; scroll-snap-type: x mandatory; }
 .chip {
-  scroll-snap-align: start; white-space: nowrap; min-height: 32px; padding: 5px 11px;
+  scroll-snap-align: start; white-space: nowrap; min-height: 30px; padding: 4px 10px;
   border-radius: 999px; border: 2px solid var(--line); background: var(--card);
-  font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--ink);
+  font-size: 0.76rem; font-weight: 600; cursor: pointer; color: var(--ink);
   display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
 }
 .chip .n { font-size: 0.75rem; color: var(--muted); font-weight: 400; }
@@ -74,6 +74,7 @@ main.wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; overf
 .orden-row { display: flex; gap: 6px; margin-bottom: 6px; flex-shrink: 0; }
 .chip.sm { min-height: 32px; font-size: 0.78rem; }
 .ppu { font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tachado { font-size: 0.78rem; color: var(--muted); text-decoration: line-through; font-variant-numeric: tabular-nums; }
 .cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
 @media (min-width: 700px) { .cards { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 .card-prod {

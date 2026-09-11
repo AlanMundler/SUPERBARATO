@@ -135,9 +135,9 @@ CATEGORIAS = [
                  "champaña", "fernet", "vodka", "ron", "whisky", "licor", "amargo",
                  "aperitivo", "gancia", " sidra", "tónica", "tonica", "levite", "aquarius",
                  "powerade", "gatorade", "te frio", "té frío", "mate listo", "agua",
-                 "bebida"]),
+                 "bebida", "soda", "frizz", "frizante"]),
     ("carniceria", ["asado", "vacio", "vacío", "matambre", "nalga", "cuadril", "lomo",
-                    "carne picada", "pollo", "pata muslo", "pechuga", "suprema", "cerdo",
+                    "carne picada", "carne", "pollo", "pata muslo", "pechuga", "suprema", "cerdo",
                     "bondiola", "chorizo", "morcilla", "salchicha", "viena", "milanesa",
                     "hamburguesa", "pescado", "merluza", "filet", "brotola", "cazuela de mar",
                     "cordero", "lechón", "lechon", "entraña", "bife", "osobuco", "costilla",
@@ -162,7 +162,8 @@ CATEGORIAS = [
                    "donut", "churro", "bollo", "pebete", "figaza", "baguette",
                    "ciabatta", "grisines", "tostada", "tostado "]),
     ("limpieza", ["lavandina", "detergente", "limpiador", "desinfectante", "desengrasante",
-                  "lustramuebles", "lavavajilla", "papel higienico", "papel higiénico",
+                  "lustramuebles", "lavavajilla", "jabon en polvo", "jabon para ropa",
+                  "soda caustica", "lavandina en gel", "papel higienico", "papel higiénico",
                   "rollo de cocina", "servilleta", "bolsa de residuo", "bolsa de consorcio",
                   "trapo", "rejilla", "escoba", "cloro", "suavizante", "quitamanchas",
                   "cif", "ayudin", "magistral", "ala jabon", "drive", "skip", "lysoform",
@@ -175,7 +176,7 @@ CATEGORIAS = [
                     "protector diario", "algodon", "hisopo", "afeitadora", "espuma de afeitar",
                     "talco", "nivea", "dove", "rexona", "colgate", "plusbelle", "pantene",
                     "garnier", "loreal", "natura", "avon", "desodorante de piso"]),
-    ("almacen", ["yerba", "fideos", "tallarines", "arroz", "aceite", "harina", "azucar",
+    ("almacen", ["yerba", "fideos", "fideo", "tallarines", "arroz", "aceite", "harina", "azucar",
                  "cafe", "café", "te ", "té", "mate cocido", "mermelada", "dulce de leche",
                  "miel", "galletita", "galleta", "alfajor", "chocolate", "cacao", "nesquik",
                  "toddy", "conserva", "atun", "atún", "sardina", "caballa", "pure de tomate",
@@ -191,54 +192,68 @@ CATEGORIAS = [
                  "caramelo", "chupetin", "chicle", "gomita", "turron",
                  "alfajor", "bombon", "golosina", "malvavisco", "oblea",
                  "en lata", "enlatado", "saborizador", "malvadisco", "pochoclo",
-                 "ñoqui", "chips", "pepa", "frita"]),
+                  "ñoqui", "chips", "pepa", "frita", "raviol", "pascualina",
+                  "dulce batata", "pulpa", "comino"]),
 ]
 
 
-# Si dos categorías empatan en coincidencias, gana la primera de esta lista.
+# Si dos categorías empatan, gana la primera de esta lista.
 PRIORIDAD_CATEGORIAS = ["lacteos", "bebidas", "carniceria", "panaderia",
                         "limpieza", "perfumeria", "almacen", "verduleria"]
 
+# Formas industriales: la verdura/fruta es ingrediente, no producto fresco.
+# Van primero y son incondicionales ("tomate pelado", "arvejas partidas").
+OVERRIDE_ALMACEN = ["en lata", "enlatado", "en conserva", "deshidratad",
+                    "pure tomate", "pelado", "partida", "en aceite", "cubetead"]
+FRITO_RE = r"\bFRIT[OA]S?\b"  # papas/batatas fritas = snack
+SABOR_RE = r"\bSABOR"  # "sabor X" = saborizado, nunca verdura fresca
 
-def _hits(t, cat, kws):
-    n = 0
-    for kw in kws:
-        k = norm(kw).strip()
-        if not k:
-            continue
-        if cat == "lacteos" and k == "leche" and "dulce de leche" in t:
-            continue  # "alfajor con dulce de leche" es golosina, no lácteo
-        if len(k) <= 4:
-            # Palabras cortas: match exacto, plural opcional
-            # (evita 'ajo' en 'alfajor'; permite 'pepas', 'uvas').
-            if re.search(r"\b" + re.escape(k) + r"S?\b", t):
-                n += 1
-        elif k in t:
-            n += 1
-    return n
+
+def _match_kw(t, k):
+    """Posición inicial del keyword en el texto o None.
+    Cortas (<=4): palabra exacta con plural opcional ('ajo' sí, 'alfajor' no)."""
+    if len(k) <= 4:
+        m = re.search(r"\b" + re.escape(k) + r"S?\b", t)
+        return m.start() if m else None
+    i = t.find(k)
+    return i if i >= 0 else None
+
+
+def _mejor(t, por_nombre, solo_frases):
+    """(pos, -largo, orden, cat) del mejor match o None.
+    Gana la mención más temprana; empatan la frase más larga y la prioridad."""
+    mejor = None
+    for orden, cat in enumerate(PRIORIDAD_CATEGORIAS):
+        for kw in por_nombre.get(cat, []):
+            k = norm(kw).strip()
+            if not k or (solo_frases and " " not in k):
+                continue
+            pos = _match_kw(t, k)
+            if pos is None:
+                continue
+            clave = (pos, -len(k), orden)
+            if mejor is None or clave < mejor[0]:
+                mejor = (clave, cat)
+    return mejor[1] if mejor else None
 
 
 def categorizar(descripcion, marca=""):
+    """1) formas industriales -> almacén. 2) frases ("jabon en polvo").
+    3) primer sustantivo ("ravioles de pollo" -> ravioles).
+    4) verdulería solo si es fresco (sin marca "sabor")."""
     t = norm((descripcion or "") + " " + (marca or ""))
     por_nombre = dict(CATEGORIAS)
-    # Fase 1: todo menos verdulería. Un tomate en lata o una mermelada de
-    # frutilla son almacén aunque nombren una fruta/verdura.
-    mejor, mejor_n = None, 0
-    for cat in PRIORIDAD_CATEGORIAS:
-        if cat == "verduleria":
-            continue
-        n = _hits(t, cat, por_nombre.get(cat, []))
-        if n > mejor_n:
-            mejor, mejor_n = cat, n
-    if mejor:
-        return mejor
-    # Fase 2: "sabor X" = producto saborizado (agua, yogur bebible, caldo),
-    # nunca verdura fresca. (norm() devuelve mayúsculas: literal en mayús.)
-    if re.search(r"\bSABOR", t):
+    if any(norm(p) in t for p in OVERRIDE_ALMACEN) or re.search(FRITO_RE, t):
+        return "almacen"
+    frase = _mejor(t, por_nombre, solo_frases=True)
+    if frase:
+        return frase
+    simple = _mejor(t, por_nombre, solo_frases=False)
+    if simple is None:
         return "otros"
-    if _hits(t, "verduleria", por_nombre.get("verduleria", [])) > 0:
-        return "verduleria"
-    return "otros"
+    if simple == "verduleria" and re.search(SABOR_RE, t):
+        return "otros"
+    return simple
 
 
 # ---------------------------------------------------------------- SEPA
@@ -865,6 +880,17 @@ SHEET_DISTRI = (
     "12k4LmArYwr-Suclb0pY1E1z5A5uzlGJO/export?format=csv&gid=1291461654"
 )
 
+# La planilla trae sus propios rubros: se traducen a las 9 categorías del
+# sitio; si el rubro es desconocido, se clasifica por nombre del producto.
+SHEET_CAT_MAP = {"LACTEOS": "lacteos", "BEBIDAS": "bebidas",
+                 "LIMPIEZA Y DESINFECCION": "limpieza",
+                 "FIAMBRES, EMBUTIDOS Y GRASAS": "carniceria",
+                 "PANIFICACION Y PASTAS FRESCAS": "panaderia",
+                 "NO PERECEDEROS": "almacen", "ADEREZOS": "almacen",
+                 "ESPECIAS": "almacen", "COPETIN": "almacen",
+                 "DESCARTABLES": "otros"}
+
+
 def correr_sheet():
     """Extrae lista de precios de LA DISTRI (mayorista Córdoba Capital).
     Columnas: COD | CATEGORÍA | PRODUCTOS | PRECIO ESPECIAL CON DESCUENTO | PRECIO LISTA | ..."""
@@ -896,10 +922,11 @@ def correr_sheet():
             continue
         precio = esp if esp < lis else lis
         promo = esp < lis
+        cat = SHEET_CAT_MAP.get(norm(cat), "") or categorizar(prod)
         pares.append({
             "ean": "SHT-" + re.sub(r"[^A-Z0-9]+", "-", norm(prod))[:45],
             "producto": prod[:90], "marca": "LA DISTRI",
-            "categoria": cat.lower()[:30] or "almacen",
+            "categoria": cat,
             "precio": precio, "precio_lista": lis, "precio_min": precio,
             "promo": promo,
             "leyenda": "Precio especial mayorista" if promo else "Precio lista mayorista",
@@ -1101,35 +1128,68 @@ def selftest():
     assert ppu_desde(750, 250, "ml") == (3000.0, "l")
     assert ppu_desde(500, 0, "un") == (None, "")
     assert ppu_desde(999, 1, "xyz") == (None, "")
-    assert categorizar("Yerba Mate Taragüí 1kg") == "almacen"
-    assert categorizar("Leche entera La Serenísima") == "lacteos"
-    assert categorizar("Asado de novillo x kg") == "carniceria"
-    assert categorizar("Lavandina Ayudín 2L") == "limpieza"
-    assert categorizar("Shampoo Plusbelle") == "perfumeria"
-    assert categorizar("Gaseosa Coca Cola 2.25L") == "bebidas"
-    assert categorizar("Pan francés x kg") == "panaderia"
-    assert categorizar("Papa x kg") == "verduleria"
-    assert categorizar("Destornillador phillips") == "otros"
-    # Auditoría de categorías (2026-09-11): empates los gana la prioridad,
-    # no el orden de evaluación. "Frutilla" no arrastra golosinas a verdulería.
-    assert categorizar("Caramelo Masticable Lenguetazo Frutilla") == "almacen"
-    assert categorizar("Frutilla fresca x kg") == "verduleria"
-    assert categorizar("Mermelada de frutilla 500 gr") == "almacen"
-    assert categorizar("Yogur entero de frutilla 150 gr") == "lacteos"
-    assert categorizar("Choclo en lata 300 gr") == "almacen"
-    assert categorizar("Alfajor de chocolate 50 gr") == "almacen"
-    assert categorizar("Alfajor negro relleno con dulce de leche 60 gr") == "almacen"
-    # Auditoría 2 (2026-09-11): "sabor a fruta" no es verdulería.
-    assert categorizar("Agua Sabor Manzana 500 cc") == "bebidas"
-    assert categorizar("Actimel sabor naranja 100 gr") == "otros"
-    assert categorizar("Dulce de batata 500 g") == "almacen"
-    assert categorizar("Galletas Mini Limon 180 gr") == "almacen"
-    assert categorizar("Tomate triturado en lata 500 gr") == "almacen"
-    assert categorizar("Limon x kg") == "verduleria"
-    assert categorizar("Shampoo Sandia Kids 350 cc") == "perfumeria"
-    assert categorizar("Pepas Batata 300 gr") == "almacen"
-    assert categorizar("Batatas Fritas 75 gr") == "almacen"
-    assert categorizar("Batata Por Kg") == "verduleria"
+    # Arrange: (texto, categoría esperada). Casos reales de auditoría.
+    casos = [
+        ("Yerba Mate Taragui 1kg", "almacen"),
+        ("Leche entera La Serenisima", "lacteos"),
+        ("Asado de novillo x kg", "carniceria"),
+        ("Lavandina Ayudin 2L", "limpieza"),
+        ("Shampoo Plusbelle", "perfumeria"),
+        ("Gaseosa Coca Cola 2.25L", "bebidas"),
+        ("Pan frances x kg", "panaderia"),
+        ("Papa x kg", "verduleria"),
+        ("Destornillador phillips", "otros"),
+        ("Caramelo Masticable Lenguetazo Frutilla", "almacen"),
+        ("Frutilla fresca x kg", "verduleria"),
+        ("Mermelada de frutilla 500 gr", "almacen"),
+        ("Yogur entero de frutilla 150 gr", "lacteos"),
+        ("Choclo en lata 300 gr", "almacen"),
+        ("Alfajor de chocolate 50 gr", "almacen"),
+        ("Alfajor negro relleno con dulce de leche 60 gr", "almacen"),
+        ("Agua Sabor Manzana 500 cc", "bebidas"),
+        ("Actimel sabor naranja 100 gr", "otros"),
+        ("Dulce de batata 500 g", "almacen"),
+        ("Galletas Mini Limon 180 gr", "almacen"),
+        ("Tomate triturado en lata 500 gr", "almacen"),
+        ("Limon x kg", "verduleria"),
+        ("Shampoo Sandia Kids 350 cc", "perfumeria"),
+        ("Pepas Batata 300 gr", "almacen"),
+        ("Batatas Fritas 75 gr", "almacen"),
+        ("Batata Por Kg", "verduleria"),
+        ("Queso untable sabor jamon 180 g", "lacteos"),
+        ("Ravioles de pollo 520 g", "almacen"),
+        ("Fideos ramen sabor pollo 70 g", "almacen"),
+        ("Pan para Hamburguesa 4 uni", "panaderia"),
+        ("Prepizza de tomate 250 g", "panaderia"),
+        ("Jabon en polvo Ala 400 g", "limpieza"),
+        ("Jabon de tocador 150 g", "perfumeria"),
+        ("Aceite en aerosol 120 cc", "almacen"),
+        ("Galletitas con leche 136 g", "almacen"),
+        ("Picadillo de carne 90 g", "carniceria"),
+        ("Fideo largo guisero 500 g", "almacen"),
+        ("Bebida de Hierbas Sabor Pomelo 1.35 L", "bebidas"),
+        ("Bolsas de Residuos Sabor Limon 20 u", "limpieza"),
+        ("Pochoclos Sabor Acaramelados 100 g", "almacen"),
+        ("Pulpa de Tomate 205 gr", "almacen"),
+        ("Hamburguesa congelada x 2 uni", "carniceria"),
+        ("Soda 2Lt", "bebidas"),
+        ("Soda caustica 1 kg", "limpieza"),
+        ("Frizze 750 ml", "bebidas"),
+        ("Tomate cubeteado 400 g", "almacen"),
+        ("Espinaca congelada en bolsa 400 g", "verduleria"),
+        ("Lomo de atun en aceite 170 g", "almacen"),
+        ("Comino 1 kg", "almacen"),
+        ("Tomate perita pelado 400 g", "almacen"),
+        ("Pure de tomate 210 gr", "almacen"),
+        ("Tomate perita x kg", "verduleria"),
+        ("Arvejas partidas en bolsa 400 g", "almacen"),
+        ("Crema de leche 350 cc", "lacteos"),
+        ("Dulce de leche clasico 400 g", "almacen"),
+    ]
+    # Act + Assert
+    fallos = [(t, categorizar(t), esp) for t, esp in casos
+              if categorizar(t) != esp]
+    assert not fallos, f"mal clasificados: {fallos}"
 
     com = ("id_comercio|id_bandera|bandera_descripcion\n"
            "9|1|Vea\n9|2|Disco\n")
