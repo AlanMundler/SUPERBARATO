@@ -263,7 +263,7 @@ def ppu_desde(precio, cantidad, unidad):
     if not precio or not cantidad or cantidad <= 0:
         return None, ""
     u = norm(unidad).replace(".", "")
-    if u in ("KG", "KILO", "KILOS", "K"):
+    if u in ("KG", "KILO", "KILOS"):
         return round(precio / cantidad, 2), "kg"
     if u in ("G", "GR", "GRS", "GRM", "GRAMO", "GRAMOS"):
         return round(precio / cantidad * 1000, 2), "kg"
@@ -274,6 +274,29 @@ def ppu_desde(precio, cantidad, unidad):
     if u in ("UN", "U", "UNI", "UNID", "UNIDAD", "UNIDADES", "PZA", "PZAS"):
         return round(precio / cantidad, 2), "un"
     return None, ""
+
+
+def ppu_desde_nombre(precio, texto):
+    """Deriva cantidad/unidad del nombre ("Yerba 1kg", "Leche 2,25 L").
+    Referencial: primera mención válida. "1.500" = 1500 (miles)."""
+    if not precio or precio <= 0:
+        return None, ""
+    t = norm(texto or "")
+    m = re.search(r"(\d+(?:[.,]\d+)?)\s*(KG|KILOS?|KILOGRAMOS?|G|GRS?|GRAMOS?|L|LTS?|LT|LITROS?|ML|CC|CM3|UN(?:ID(?:AD(?:ES)?)?)?|U|PZAS?)\b", t)
+    if not m:
+        return None, ""
+    num = m.group(1).replace(",", ".")
+    try:
+        cant = float(num)
+    except ValueError:
+        return None, ""
+    if "." in num:
+        ent, dec = num.split(".", 1)
+        if len(dec) == 3 and len(ent) <= 3:
+            cant = float(ent + dec)
+    if cant <= 0:
+        return None, ""
+    return ppu_desde(precio, cant, m.group(2))
 
 
 def sepa_url_hoy():
@@ -952,6 +975,12 @@ def correr_sheet():
 def escribir_super(sid, nombre, items, fuente, fecha, cobertura, sucursales=0,
                    zona="Córdoba Capital", filtro=None):
     CATALOGO.mkdir(parents=True, exist_ok=True)
+    # ppu referencial: si la fuente no lo trae, se estima del nombre.
+    for o in items:
+        if not o.get("ppu"):
+            p, u = ppu_desde_nombre(o.get("precio"),
+                                    str(o.get("producto", "")) + " " + str(o.get("marca", "")))
+            o["ppu"], o["punidad"] = p, u
     if filtro is None:
         filtro = ("cadena cordobesa (solo opera en Córdoba)"
                   if fuente in ("vtex", "scrape") and sid in
@@ -1186,10 +1215,24 @@ def selftest():
         ("Crema de leche 350 cc", "lacteos"),
         ("Dulce de leche clasico 400 g", "almacen"),
     ]
-    # Act + Assert
+    # Act + Assert categorías
     fallos = [(t, categorizar(t), esp) for t, esp in casos
               if categorizar(t) != esp]
     assert not fallos, f"mal clasificados: {fallos}"
+    # Arrange: (texto, precio, (ppu, unidad)) para precio por unidad.
+    casos_ppu = [
+        ("Yerba mate 1kg", 5000, (5000.0, "kg")),
+        ("Fideos 500 g", 1500, (3000.0, "kg")),
+        ("Gaseosa 2,25 L", 3000, (1333.33, "l")),
+        ("Leche 1L", 1500, (1500.0, "l")),
+        ("Huevo x 6 un", 3000, (500.0, "un")),
+        ("Azucar 1.500 g", 2000, (1333.33, "kg")),
+        ("Shampoo 400 ml", 4000, (10000.0, "l")),
+        ("Pan lactal", 2000, (None, "")),
+    ]
+    fallos_ppu = [(t, ppu_desde_nombre(p, t), esp) for t, p, esp in casos_ppu
+                  if ppu_desde_nombre(p, t) != esp]
+    assert not fallos_ppu, f"ppu mal: {fallos_ppu}"
 
     com = ("id_comercio|id_bandera|bandera_descripcion\n"
            "9|1|Vea\n9|2|Disco\n")
