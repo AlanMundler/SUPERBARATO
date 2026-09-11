@@ -1,6 +1,7 @@
-/* SUPERBARATO SW: cachea el shell (html/css/js), los datos siempre de red. */
-const CACHE = "superbarato-v4";
-const SHELL = ["./", "index.html", "assets/app.js?v=4", "assets/styles.css?v=4", "manifest.json"];
+/* SUPERBARATO SW: red primero, caché solo si no hay internet.
+   Los precios (/data/) jamás se cachean. */
+const CACHE = "superbarato-v5";
+const SHELL = ["./", "index.html", "assets/app.js?v=5", "assets/styles.css?v=5", "manifest.json"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -22,10 +23,10 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (url.pathname.includes("/data/")) return; // precios: siempre frescos
   e.respondWith(
-    caches.match(e.request).then((hit) => hit || fetch(e.request).then((res) => {
+    fetch(e.request).then((res) => {
       const copy = res.clone();
       caches.open(CACHE).then((c) => c.put(e.request, copy));
       return res;
-    }).catch(() => caches.match("index.html")))
+    }).catch(() => caches.match(e.request).then((hit) => hit || caches.match("index.html")))
   );
 });

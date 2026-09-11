@@ -22,6 +22,8 @@ const state = {
   idx: null, // { byKey: Map, byId: Map }
 };
 
+const APP_VERSION = "v4.4.0 · 2026-09-11";
+
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => "$" + Number(n).toLocaleString("es-AR");
 const normTxt = (s) => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -422,6 +424,7 @@ function renderFuentes() {  const box = $("fuentes-lista");
 // ---- Navegación por pestañas: todo entra en una pantalla ----
 function showView(nombre) {
   state.vista = nombre;
+  cerrarComparador();
   for (const v of ["buscar", "ofertas", "lista", "mas"]) {
     document.getElementById("view-" + v).hidden = v !== nombre;
     document.getElementById("view-" + v).classList.toggle("active", v === nombre);
@@ -769,6 +772,7 @@ async function init() {
   $("btn-limpiar-busqueda").onclick = () => { $("buscador").value = ""; setBusqueda(""); $("buscador").focus(); };
   $("btn-mas").onclick = () => { state.visibles = Math.min(state.visibles + 60, 300); renderOfertas(); };
   $("btn-cerrar-comp").onclick = cerrarComparador;
+  $("btn-cerrar-comp2").onclick = cerrarComparador;
   $("comparador-modal").addEventListener("click", (e) => {
     if (e.target.id === "comparador-modal") cerrarComparador();
   });
@@ -799,6 +803,8 @@ async function init() {
   $("ord-ppu").onclick = () => setOrden("ppu");
 
   renderMeta(); renderTabs(); renderOfertas(); renderRecos(); renderMejor(); renderFuentes(); renderListas(); renderBar(); renderFavs(); checkAlertas(); applyTheme(); showView("buscar");
+  const vv = $("app-version");
+  if (vv) vv.textContent = "Versión " + APP_VERSION;
   try {
     const q = new URLSearchParams(location.search).get("l");
     if (q) {
@@ -845,6 +851,28 @@ async function init() {
     const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
     localStorage.setItem("superbarato-theme", t);
     applyTheme();
+  };
+  $("btn-diag").onclick = () => {
+    const spills = [];
+    document.querySelectorAll("#reco-lista .reco-win, .card-prod .prod-name").forEach((el) => {
+      if (el.scrollWidth - el.clientWidth > 2) {
+        spills.push((el.textContent || "").trim().slice(0, 28) + " (+" + Math.round(el.scrollWidth - el.clientWidth) + "px)");
+      }
+    });
+    const vis = [...document.querySelectorAll(".view")].filter((v) => getComputedStyle(v).display !== "none").map((v) => v.id);
+    const lineas = [
+      "SUPERBARATO " + APP_VERSION,
+      "pantalla: " + window.innerWidth + "x" + window.innerHeight + " DPR:" + (window.devicePixelRatio || 1),
+      "navegador: " + (navigator.userAgent || "").slice(0, 90),
+      "vistas visibles: " + (vis.join(", ") || "ninguna"),
+      "scroll pagina: " + (document.documentElement.scrollWidth - window.innerWidth) + "px",
+      "sw: " + (navigator.serviceWorker && navigator.serviceWorker.controller ? "activo" : "no"),
+      "derrames: " + (spills.length ? spills.slice(0, 6).join(" | ") : "ninguno"),
+    ];
+    const out = $("diag-out");
+    out.textContent = lineas.join("\n");
+    out.hidden = false;
+    fallbackCopy(lineas.join("\n"), () => toast("Diagnóstico copiado, pegalo en el chat ✅", 4000));
   };
 }
 

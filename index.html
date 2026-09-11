@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" />
-  <link rel="stylesheet" href="assets/styles.css?v=4" />
+  <link rel="stylesheet" href="assets/styles.css?v=5" />
 </head>
 <body>
   <header class="top">
@@ -76,6 +76,8 @@
           <h2>⚙️ Ajustes</h2>
           <div class="ajuste-row"><button id="btn-tema">🌓 Modo oscuro: no</button></div>
           <div class="ajuste-row"><button id="btn-instalar" hidden>📲 Instalar app</button></div>
+          <div class="ajuste-row"><button id="btn-diag">🔍 Diagnosticar pantalla</button></div>
+          <pre id="diag-out" class="diag-out" hidden></pre>
         </section>
           <p class="muted">Elegí un super y mirá sus mejores ofertas.</p>
           <div id="mejor-chips" class="chips"></div>
@@ -92,6 +94,7 @@
         <footer class="footer">
           <p>Precios de referencia, actualizados 1 vez por día. Verificá el precio final en cada super antes de comprar.</p>
           <p><a href="https://github.com/AlanMundler/SUPERBARATO">Código abierto</a> · Hecho para ahorrar en Córdoba</p>
+          <p id="app-version" class="muted"></p>
         </footer>
       </div>
     </section>
@@ -111,11 +114,12 @@
         <button id="btn-cerrar-comp" class="icon-btn" aria-label="Cerrar comparador">✕</button>
       </div>
       <div id="comparador-detalle" class="sheet-body"></div>
+      <button id="btn-cerrar-comp2" class="big-btn ghost">Cerrar</button>
     </section>
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script src="assets/app.js?v=4"></script>
+  <script src="assets/app.js?v=5"></script>
 </body>
 </html>
