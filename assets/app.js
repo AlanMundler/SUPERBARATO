@@ -269,33 +269,62 @@ function renderListas() {
     return;
   }
   const porSuper = {};
+  const claves = new Set();
   let optimo = 0, peor = 0;
   for (const id of state.lista) {
     const m = mejorDe(id);
     if (!m) continue;
     const g = state.idx.byKey.get(grupoKey(m));
     const peorPrecio = g ? g.items[g.items.length - 1].precio : m.precio;
+    const media = g ? g.items.reduce((a, o) => a + o.precio, 0) / g.items.length : m.precio;
     optimo += m.precio;
     peor += peorPrecio;
-    porSuper[m.super] = porSuper[m.super] || { items: [], total: 0 };
+    claves.add(grupoKey(m));
+    porSuper[m.super] = porSuper[m.super] || { items: [], total: 0, ahorroMedia: 0 };
     porSuper[m.super].items.push({ ...m, origenId: id });
     porSuper[m.super].total += m.precio;
+    porSuper[m.super].ahorroMedia += media - m.precio;
   }
   const ahorro = peor - optimo;
-  let html = `<div class="ahorro-banner">🧾 Total óptimo: ${fmt(optimo)}${ahorro > 0 ? ` · Ahorrás ${fmt(ahorro)}` : ""}</div>`;
+  let html = `<div class="ahorro-banner">🧾 Total óptimo: ${fmt(optimo)}${ahorro > 0 ? ` · Ahorrás ${fmt(Math.round(ahorro))}` : ""}</div>`;
   const orden = Object.entries(porSuper).sort((a, b) => b[1].total - a[1].total);
   for (const [superId, gr] of orden) {
     const s = superById(superId);
     const link = metaLink(superId);
     html += `<div class="super-grupo"><h3><span class="badge" style="background:${s.color}">${s.nombre}</span>` +
+      `<span class="muted">carrito · ${gr.items.length} cosa${gr.items.length > 1 ? "s" : ""}</span>` +
       `${link ? `<a class="link-btn" href="${link}" target="_blank" rel="noopener">🏪 Ir a la tienda</a>` : ""}` +
-      `<span class="sub">${fmt(gr.total)}</span></h3><ul>`;
+      `<span class="sub">${fmt(gr.total)}</span></h3>` +
+      `${gr.ahorroMedia > 1 ? `<p class="muted">Acá ahorrás ${fmt(Math.round(gr.ahorroMedia))} vs el precio promedio.</p>` : ""}<ul>`;
     for (const o of gr.items) {
       html += `<li><span class="t">${o.producto} <span class="muted">(${o.marca})</span></span>` +
         `<span class="p">${fmt(o.precio)}</span>` +
         `<button class="btn-del" data-del="${o.origenId}" aria-label="Quitar ${o.producto}">✕</button></li>`;
     }
     html += "</ul></div>";
+  }
+  // ¿Y si quiero ir a UN solo super? Ranking de los que tienen TODO lo de mi lista
+  const presentes = [...new Set(state.ofertas.map((o) => o.super))];
+  const single = [];
+  for (const sid of presentes) {
+    let total = 0, falta = 0;
+    for (const key of claves) {
+      const g = state.idx.byKey.get(key);
+      const o = g ? g.items.find((x) => x.super === sid) : null;
+      if (o) total += o.precio;
+      else falta++;
+    }
+    if (!falta && total > 0) single.push({ sid, total });
+  }
+  single.sort((a, b) => a.total - b.total);
+  if (single.length) {
+    html += `<h3>Si preferís ir a un solo lugar…</h3>`;
+    for (const { sid, total } of single.slice(0, 3)) {
+      const s = superById(sid);
+      const extra = total - optimo;
+      html += `<div class="reco"><strong>🛒 Todo en ${s.nombre}: ${fmt(total)}</strong>` +
+        `${extra > 0 ? `(+${fmt(extra)} vs repartir)` : "(igual que el óptimo 🎉)"}</div>`;
+    }
   }
   box.innerHTML = html;
   box.querySelectorAll("[data-del]").forEach((b) => {

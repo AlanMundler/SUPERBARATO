@@ -185,24 +185,44 @@ CATEGORIAS = [
                  "vainilla", "coco rallado", "dulce de batata", "dulce de membrillo",
                  "mermelada", "jalea", "ketchup", "salsa golf", "aceto", "aceituna",
                  "pickles", "arvejas en lata", "choclo en lata", "durazno en almibar",
-                 "coctel de frutas", "leche condensada", "crema de mani"]),
+                 "coctel de frutas", "leche condensada", "crema de mani",
+                 "caramelo", "chupetin", "chicle", "gomita", "turron",
+                 "alfajor", "bombon", "golosina", "malvavisco", "oblea",
+                 "en lata", "enlatado"]),
 ]
+
+
+# Si dos categorías empatan en coincidencias, gana la primera de esta lista.
+PRIORIDAD_CATEGORIAS = ["lacteos", "bebidas", "carniceria", "panaderia",
+                        "limpieza", "perfumeria", "almacen", "verduleria"]
+
+
+def _hits(t, cat, kws):
+    n = 0
+    for kw in kws:
+        k = norm(kw).strip()
+        if not k:
+            continue
+        if cat == "lacteos" and k == "leche" and "dulce de leche" in t:
+            continue  # "alfajor con dulce de leche" es golosina, no lácteo
+        if len(k) <= 4:
+            # Palabras cortas: match exacto (evita 'ajo' en 'alfajor').
+            if re.search(r"\b" + re.escape(k) + r"\b", t):
+                n += 1
+        elif k in t:
+            n += 1
+    return n
 
 
 def categorizar(descripcion, marca=""):
     t = norm((descripcion or "") + " " + (marca or ""))
-    for cat, kws in CATEGORIAS:
-        for kw in kws:
-            k = norm(kw).strip()
-            if not k:
-                continue
-            if len(k) <= 4:
-                # Palabras cortas: match exacto (evita 'ajo' en 'alfajor').
-                if re.search(r"\b" + re.escape(k) + r"\b", t):
-                    return cat
-            elif k in t:
-                return cat
-    return "otros"
+    por_nombre = dict(CATEGORIAS)
+    mejor, mejor_n = "otros", 0
+    for cat in PRIORIDAD_CATEGORIAS:
+        n = _hits(t, cat, por_nombre.get(cat, []))
+        if n > mejor_n:
+            mejor, mejor_n = cat, n
+    return mejor
 
 
 # ---------------------------------------------------------------- SEPA
@@ -1113,6 +1133,15 @@ def selftest():
     assert categorizar("Pan francés x kg") == "panaderia"
     assert categorizar("Papa x kg") == "verduleria"
     assert categorizar("Destornillador phillips") == "otros"
+    # Auditoría de categorías (2026-09-11): empates los gana la prioridad,
+    # no el orden de evaluación. "Frutilla" no arrastra golosinas a verdulería.
+    assert categorizar("Caramelo Masticable Lenguetazo Frutilla") == "almacen"
+    assert categorizar("Frutilla fresca x kg") == "verduleria"
+    assert categorizar("Mermelada de frutilla 500 gr") == "almacen"
+    assert categorizar("Yogur entero de frutilla 150 gr") == "lacteos"
+    assert categorizar("Choclo en lata 300 gr") == "almacen"
+    assert categorizar("Alfajor de chocolate 50 gr") == "almacen"
+    assert categorizar("Alfajor negro relleno con dulce de leche 60 gr") == "almacen"
 
     com = ("id_comercio|id_bandera|bandera_descripcion\n"
            "9|1|Vea\n9|2|Disco\n")
