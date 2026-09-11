@@ -16,6 +16,7 @@ const state = {
   vista: "buscar",
   orden: "precio",
   mejorSuper: null,
+  cartSuper: null,
   lista: JSON.parse(localStorage.getItem("superbarato-lista") || "[]"),
   idx: null, // { byKey: Map, byId: Map }
 };
@@ -352,6 +353,46 @@ function mejorDe(id) {
 function renderBar() {
   updateTabBadge();
 }
+function cartDatos(clavesArr) {
+  const presentes = [...new Set(state.ofertas.map((o) => o.super))];
+  const cob = [];
+  for (const sid of presentes) {
+    let total = 0, tiene = 0;
+    for (const key of clavesArr) {
+      const g = state.idx.byKey.get(key);
+      const o = g ? g.items.find((x) => x.super === sid) : null;
+      if (o) { total += o.precio; tiene++; }
+    }
+    if (tiene) cob.push({ sid, total, tiene });
+  }
+  cob.sort((a, b) => (b.tiene - a.tiene) || (a.total - b.total));
+  return cob;
+}
+function cartDetalleHTML(clavesArr, sid) {
+  const s = superById(sid);
+  const link = metaLink(sid);
+  let total = 0, falta = 0, rows = "";
+  for (const key of clavesArr) {
+    const g = state.idx.byKey.get(key);
+    if (!g) continue;
+    const best = g.items[0];
+    const o = g.items.find((x) => x.super === sid);
+    if (!o) {
+      falta++;
+      rows += `<li><span class="t">${g.producto} <span class="muted">(${g.marca})</span></span><span class="p muted">no está</span></li>`;
+      continue;
+    }
+    total += o.precio;
+    const dif = o.precio - best.precio;
+    const estado = dif <= 0
+      ? `<span class="comp-dif win">✅ mejor precio</span>`
+      : `<span class="comp-dif">+$${dif.toLocaleString("es-AR")} vs ${superById(best.super).nombre}</span>`;
+    rows += `<li><span class="t">${o.producto} <span class="muted">(${o.marca})</span><br>${estado}</span><span class="p">${fmt(o.precio)}</span></li>`;
+  }
+  return `<div class="super-grupo"><h3><span class="badge" style="background:${s.color}">${s.nombre}</span>` +
+    `<span class="muted">tu lista acá: ${fmt(total)}${falta ? ` · faltan ${falta}` : ""}</span>` +
+    `${link ? `<a class="link-btn" href="${link}" target="_blank" rel="noopener">🏪 Ir a la tienda</a>` : ""}</h3><ul>${rows}</ul></div>`;
+}
 function renderListas() {
   const box = $("listas-detalle");
   if (!state.lista.length) {
@@ -417,7 +458,22 @@ function renderListas() {
         `${extra > 0 ? `(+${fmt(extra)} vs repartir)` : "(igual que el óptimo 🎉)"}</div>`;
     }
   }
+  const clavesArr = [...claves];
+  const cob = cartDatos(clavesArr);
+  if (cob.length) {
+    if (!state.cartSuper || !cob.some((c) => c.sid === state.cartSuper)) {
+      state.cartSuper = (single.length ? single[0].sid : cob[0].sid);
+    }
+    html += `<h3>Carrito completo por super</h3>` +
+      `<p class="muted">Tu lista entera en cada super, comparada con lo más barato.</p>` +
+      `<div class="chips" id="cart-chips">` +
+      cob.map((c) => `<button class="chip${c.sid === state.cartSuper ? " active" : ""}" data-cart="${c.sid}">${superById(c.sid).nombre} <span class="n">${c.tiene}/${clavesArr.length}</span></button>`).join("") +
+      `</div><div id="cart-detalle">` + cartDetalleHTML(clavesArr, state.cartSuper) + `</div>`;
+  }
   box.innerHTML = html;
+  box.querySelectorAll("[data-cart]").forEach((b) => {
+    b.onclick = () => { state.cartSuper = b.dataset.cart; renderListas(); };
+  });
   box.querySelectorAll("[data-del]").forEach((b) => {
     b.onclick = () => { quitar(b.dataset.del); renderBar(); toast("Quitado de la lista"); };
   });

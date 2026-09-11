@@ -14,10 +14,12 @@
   --acc-soft: #e7f6ec;
   --cta: #ea580c;
   --cta-ink: #ffffff;
+  --link: #005baa;
+  --strip: #e6f1fe;
   --danger: #b91c1c;
   --radius: 18px;
   --tabbar-h: 60px;
-  --font: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font: "Ubuntu", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { overflow: hidden; overscroll-behavior: none; }
@@ -54,7 +56,9 @@ button { font-family: var(--font); touch-action: manipulation; }
   width: 100%; min-height: 32px; font-size: 0.78rem; border-radius: 10px;
   border: 2px solid var(--line); background: var(--card); color: var(--ink); padding: 0 10px;
 }
-.chips { display: flex; gap: 6px; overflow-x: auto; padding: 6px 2px 2px; scroll-snap-type: x mandatory; }
+.chips { display: flex; gap: 6px; overflow-x: auto; padding: 6px 2px 2px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+#tabs-categorias { background: var(--strip); margin: 6px -16px 0; padding: 6px 16px 4px; }
 .chip {
   scroll-snap-align: start; white-space: nowrap; min-height: 30px; padding: 4px 10px;
   border-radius: 999px; border: 2px solid var(--line); background: var(--card);
@@ -98,10 +102,16 @@ main.wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; overf
 }
 .btn-add:active { transform: scale(0.94); }
 .link-btn {
-  font-size: 0.82rem; font-weight: 600; color: var(--acc); text-decoration: none;
-  border: 2px solid var(--line); border-radius: 10px; padding: 6px 10px; background: var(--card);
-  display: inline-flex; align-items: center; min-height: 40px;
+  font-size: 0.75rem; font-weight: 500; color: var(--link); text-decoration: none;
+  border: 2px solid var(--line); border-radius: 8px; padding: 4px 8px; background: var(--card);
+  display: inline-flex; align-items: center; min-height: 34px;
 }
+/* Shelf horizontal estilo góndola para "lo mejor de cada super" */
+.shelf { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.shelf::-webkit-scrollbar { display: none; }
+.shelf .card-prod { flex: 0 0 230px; scroll-snap-align: start; flex-direction: column; }
+.shelf .prod-side { flex-direction: row; align-items: center; align-self: stretch; justify-content: space-between; }
+.shelf .emoji { width: 44px; height: 44px; flex-basis: 44px; font-size: 1.5rem; }
 .big-btn {
   display: block; width: 100%; min-height: 48px; margin: 8px 0 4px; font-size: 1rem; font-weight: 800;
   border-radius: 16px; border: none; background: var(--cta); color: var(--cta-ink); cursor: pointer; flex-shrink: 0;
