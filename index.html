@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>SUPERBARATO — Lo más barato de Córdoba Capital</title>
   <meta name="description" content="Buscá un producto y te decimos dónde está más barato en Córdoba Capital, y en qué super comprar cada cosa de tu lista." />
   <link rel="stylesheet" href="assets/styles.css" />
@@ -12,11 +12,10 @@
     <div class="wrap">
       <div class="brand-row">
         <p class="brand">🛒 SUPERBARATO</p>
-        <p class="brand-sub">Córdoba Capital · solo precios de acá</p>
+        <p id="meta-linea" class="meta">Cargando precios…</p>
       </div>
-      <p id="meta-linea" class="meta">Cargando precios…</p>
       <div class="search-row">
-        <input id="buscador" type="search" placeholder="¿Qué buscás? Ej: yerba, leche, asado…" autocomplete="off" aria-label="Buscar producto" />
+        <input id="buscador" type="search" placeholder="¿Qué buscás? Ej: yerba…" autocomplete="off" aria-label="Buscar producto" />
         <button id="btn-limpiar-busqueda" class="icon-btn" aria-label="Limpiar búsqueda" hidden>✕</button>
       </div>
       <div class="filter-row">
@@ -29,48 +28,56 @@
   </header>
 
   <main class="wrap">
-    <section id="resultados" aria-live="polite">
-      <p id="resultados-meta" class="results-meta"></p>
-      <section id="comparador-panel" class="panel" hidden>
-        <div class="panel-head">
-          <h2>⚖️ Compará precios</h2>
-          <button id="btn-cerrar-comp" class="icon-btn" aria-label="Cerrar comparador">✕</button>
-        </div>
-        <div id="comparador-detalle"></div>
-      </section>
-      <div id="ofertas-lista" class="cards"></div>
+    <section id="view-buscar" class="view active" aria-label="Buscar">
+      <p id="resultados-meta" class="results-meta" aria-live="polite"></p>
+      <div id="ofertas-lista" class="cards scroll"></div>
       <button id="btn-mas" class="big-btn ghost" hidden>Ver más baratos ↓</button>
     </section>
 
-    <section id="recomendaciones" class="card">
-      <h2>Dónde conviene ir</h2>
-      <div id="reco-lista" class="hscroll"></div>
-    </section>
-
-    <section id="listas" class="card">
-      <h2>Mi lista inteligente</h2>
-      <p class="muted">Tocá ➕ en lo que necesites. Acá te digo <strong>qué comprar en cada super</strong> para pagar lo menos posible.</p>
+    <section id="view-lista" class="view" aria-label="Mi lista" hidden>
       <div class="lista-actions">
         <button id="btn-canasta">🧺 Canasta básica</button>
         <button id="btn-copiar">📋 Copiar</button>
         <button id="btn-wa">💬 WhatsApp</button>
         <button id="btn-limpiar" class="danger">🗑 Vaciar</button>
       </div>
-      <div id="listas-detalle"></div>
+      <div id="listas-detalle" class="scroll"></div>
     </section>
 
-    <details id="fuentes" class="card">
-      <summary><h2>Fuentes y cobertura</h2></summary>
-      <div id="fuentes-lista"></div>
-    </details>
-
-    <footer class="footer">
-      <p>Precios de referencia, actualizados 1 vez por día. Verificá el precio final en cada super antes de comprar.</p>
-      <p><a href="https://github.com/AlanMundler/SUPERBARATO">Código abierto</a> · Hecho para ahorrar en Córdoba</p>
-    </footer>
+    <section id="view-mas" class="view" aria-label="Más info" hidden>
+      <div class="scroll">
+        <section class="card">
+          <h2>Dónde conviene ir</h2>
+          <div id="reco-lista" class="hscroll"></div>
+        </section>
+        <details id="fuentes" class="card">
+          <summary><h2>Fuentes y cobertura</h2></summary>
+          <div id="fuentes-lista"></div>
+        </details>
+        <footer class="footer">
+          <p>Precios de referencia, actualizados 1 vez por día. Verificá el precio final en cada super antes de comprar.</p>
+          <p><a href="https://github.com/AlanMundler/SUPERBARATO">Código abierto</a> · Hecho para ahorrar en Córdoba</p>
+        </footer>
+      </div>
+    </section>
   </main>
 
-  <button id="lista-bar" class="cartbar" hidden>🧾 Mi lista · <strong id="lista-bar-total"></strong> → ver</button>
+  <nav class="tabbar" aria-label="Navegación principal">
+    <button id="tab-buscar" class="tab active" aria-current="page">🔍<span>Buscar</span></button>
+    <button id="tab-lista" class="tab">🧾<span>Mi lista</span><em id="tab-badge" class="tab-badge" hidden></em></button>
+    <button id="tab-mas" class="tab">ℹ️<span>Más</span></button>
+  </nav>
+
+  <div id="comparador-modal" class="sheet-backdrop" hidden>
+    <section class="sheet" role="dialog" aria-modal="true" aria-label="Comparar precios">
+      <div class="panel-head">
+        <h2>⚖️ Compará precios</h2>
+        <button id="btn-cerrar-comp" class="icon-btn" aria-label="Cerrar comparador">✕</button>
+      </div>
+      <div id="comparador-detalle" class="sheet-body"></div>
+    </section>
+  </div>
+
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
   <script src="assets/app.js"></script>

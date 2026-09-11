@@ -13,6 +13,7 @@ const state = {
   superFiltro: "",
   comparando: null,
   visibles: 60,
+  vista: "buscar",
   lista: JSON.parse(localStorage.getItem("superbarato-lista") || "[]"),
   idx: null, // { byKey: Map, byId: Map }
 };
@@ -151,7 +152,7 @@ function renderOfertas() {
       div.onclick = (e) => {
         if (e.target.closest("[data-add]") || e.target.closest("a")) return;
         state.comparando = g.key;
-        renderComparador(true);
+        renderComparador();
       };
       box.appendChild(div);
     }
@@ -164,13 +165,13 @@ function renderOfertas() {
   if (!mas.hidden) mas.textContent = `Ver más baratos ↓ (${(gs.length - state.visibles).toLocaleString("es-AR")} restantes)`;
 }
 
-function renderComparador(scroll) {
-  const panel = $("comparador-panel");
+function renderComparador() {
+  const modal = $("comparador-modal");
   const box = $("comparador-detalle");
-  if (!state.comparando) { panel.hidden = true; return; }
+  if (!state.comparando) { modal.hidden = true; return; }
   const g = state.idx.byKey.get(state.comparando);
-  if (!g) { panel.hidden = true; return; }
-  panel.hidden = false;
+  if (!g) { modal.hidden = true; return; }
+  modal.hidden = false;
   box.innerHTML = `<h3>${g.producto} <span class="muted">${g.marca}</span></h3>` + g.items.map((o, i) => {
     const s = superById(o.super);
     const dif = i === 0 ? "✅ mejor precio" : `+$${(o.precio - g.items[0].precio).toLocaleString("es-AR")}`;
@@ -187,12 +188,11 @@ function renderComparador(scroll) {
   box.querySelectorAll("[data-add]").forEach((b) => {
     b.onclick = () => agregar(b.dataset.add);
   });
-  if (scroll) {
-    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    panel.classList.remove("flash");
-    void panel.offsetWidth;
-    panel.classList.add("flash");
-  }
+  $("btn-cerrar-comp").focus();
+}
+function cerrarComparador() {
+  state.comparando = null;
+  $("comparador-modal").hidden = true;
 }
 
 function renderRecos() {
@@ -227,6 +227,26 @@ function renderFuentes() {
   }).join("");
 }
 
+// ---- Navegación por pestañas: todo entra en una pantalla ----
+function showView(nombre) {
+  state.vista = nombre;
+  for (const v of ["buscar", "lista", "mas"]) {
+    document.getElementById("view-" + v).hidden = v !== nombre;
+    document.getElementById("view-" + v).classList.toggle("active", v === nombre);
+    const tab = document.getElementById("tab-" + v);
+    tab.classList.toggle("active", v === nombre);
+    if (v === nombre) tab.setAttribute("aria-current", "page");
+    else tab.removeAttribute("aria-current");
+  }
+  if (nombre === "lista") renderListas();
+}
+function updateTabBadge() {
+  const n = state.lista.filter((id) => state.idx.byId.get(id)).length;
+  const b = $("tab-badge");
+  b.hidden = !n;
+  b.textContent = n > 99 ? "99+" : String(n);
+}
+
 // ---- Lista inteligente: qué comprar en cada super ----
 function agregar(id) {
   state.lista.push(id);
@@ -252,20 +272,13 @@ function mejorDe(id) {
   return g ? g.items[0] : o;
 }
 function renderBar() {
-  const bar = $("lista-bar");
-  if (!state.lista.length) { bar.hidden = true; return; }
-  let total = 0, n = 0;
-  for (const id of state.lista) {
-    const m = mejorDe(id);
-    if (m) { total += m.precio; n++; }
-  }
-  bar.hidden = false;
-  $("lista-bar-total").textContent = `${n} · ${fmt(total)}`;
+  updateTabBadge();
 }
 function renderListas() {
   const box = $("listas-detalle");
   if (!state.lista.length) {
     box.innerHTML = '<p class="muted">Todavía vacía. Buscá algo arriba y tocá ➕.</p>';
+    setAccionesLista(false);
     return;
   }
   const porSuper = {};
@@ -330,6 +343,13 @@ function renderListas() {
   box.querySelectorAll("[data-del]").forEach((b) => {
     b.onclick = () => { quitar(b.dataset.del); renderBar(); toast("Quitado de la lista"); };
   });
+  setAccionesLista(true);
+}
+function setAccionesLista(hay) {
+  for (const id of ["btn-copiar", "btn-wa", "btn-limpiar"]) {
+    const b = $(id);
+    if (b) b.disabled = !hay;
+  }
 }
 // Canasta básica en un toque: agrega lo esencial y muestra
 // en qué super conviene comprar cada cosa.
@@ -348,7 +368,6 @@ function armarCanasta() {
   guardar();
   renderBar();
   toast(agregados ? `Canasta armada: ${agregados} productos ✅` : "No encontré productos");
-  document.getElementById("listas").scrollIntoView({ behavior: "smooth" });
 }
 function metaLink(superId) {
   const m = state.supersMeta.find((s) => s.id === superId);
@@ -466,16 +485,24 @@ async function init() {
     setBusqueda(e.target.value.trim());
   }, 200));
   $("btn-limpiar-busqueda").onclick = () => { $("buscador").value = ""; setBusqueda(""); $("buscador").focus(); };
-  $("btn-mas").onclick = () => { state.visibles += 60; renderOfertas(); };
-  $("btn-cerrar-comp").onclick = () => { state.comparando = null; renderComparador(false); };
+  $("btn-mas").onclick = () => { state.visibles = Math.min(state.visibles + 60, 300); renderOfertas(); };
+  $("btn-cerrar-comp").onclick = cerrarComparador;
+  $("comparador-modal").addEventListener("click", (e) => {
+    if (e.target.id === "comparador-modal") cerrarComparador();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !$("comparador-modal").hidden) cerrarComparador();
+  });
 
   $("btn-limpiar").onclick = () => { state.lista = []; guardar(); renderBar(); toast("Lista vaciada"); };
-  $("btn-canasta").onclick = armarCanasta;
+  $("btn-canasta").onclick = () => { armarCanasta(); showView("lista"); };
   $("btn-copiar").onclick = copiarLista;
   $("btn-wa").onclick = () => { window.open("https://wa.me/?text=" + encodeURIComponent(textoLista()), "_blank"); };
-  $("lista-bar").onclick = () => { document.getElementById("listas").scrollIntoView({ behavior: "smooth" }); };
+  $("tab-buscar").onclick = () => showView("buscar");
+  $("tab-lista").onclick = () => showView("lista");
+  $("tab-mas").onclick = () => showView("mas");
 
-  renderMeta(); renderTabs(); renderOfertas(); renderRecos(); renderFuentes(); renderListas(); renderBar();
+  renderMeta(); renderTabs(); renderOfertas(); renderRecos(); renderFuentes(); renderListas(); renderBar(); showView("buscar");
 }
 
 init().catch((e) => {
