@@ -1,5 +1,5 @@
 /* SUPERBARATO SW: cachea el shell (html/css/js), los datos siempre de red. */
-const CACHE = "superbarato-v2";
+const CACHE = "superbarato-v3";
 const SHELL = ["./", "index.html", "assets/app.js", "assets/styles.css", "manifest.json"];
 
 self.addEventListener("install", (e) => {
