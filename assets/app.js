@@ -22,7 +22,7 @@ const state = {
   idx: null, // { byKey: Map, byId: Map }
 };
 
-const APP_VERSION = "v4.6.0 · 2026-09-11";
+const APP_VERSION = "v4.7.0 · 2026-09-11";
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => "$" + Number(n).toLocaleString("es-AR");
@@ -182,7 +182,7 @@ function renderOfertas() {
       box.appendChild(div);
     }
     box.querySelectorAll("[data-add]").forEach((b) => {
-      b.onclick = (e) => { e.stopPropagation(); agregar(b.dataset.add); };
+      b.onclick = (e) => { e.stopPropagation(); agregar(b.dataset.add, b); };
     });
   }
   const mas = $("btn-mas");
@@ -217,7 +217,7 @@ function renderComparador() {
       </span></div>`;
   }).join("");
   box.querySelectorAll("[data-add]").forEach((b) => {
-    b.onclick = () => agregar(b.dataset.add);
+    b.onclick = () => agregar(b.dataset.add, b);
   });
   $("btn-cerrar-comp").focus();
 }
@@ -299,7 +299,7 @@ function renderMejor() {
     box.appendChild(div);
   }
   box.querySelectorAll("[data-add]").forEach((b) => {
-    b.onclick = () => agregar(b.dataset.add);
+    b.onclick = () => agregar(b.dataset.add, b);
   });
 }
 
@@ -342,7 +342,7 @@ function renderFavs() {
     box.appendChild(div);
   }
   box.querySelectorAll("[data-add]").forEach((b) => {
-    b.onclick = () => agregar(b.dataset.add);
+    b.onclick = () => agregar(b.dataset.add, b);
   });
 }
 function checkAlertas() {
@@ -408,7 +408,7 @@ function renderCaza() {
     box.appendChild(div);
   }
   box.querySelectorAll("[data-add]").forEach((b) => {
-    b.onclick = (e) => { e.stopPropagation(); agregar(b.dataset.add); };
+    b.onclick = (e) => { e.stopPropagation(); agregar(b.dataset.add, b); };
   });
 }
 
@@ -450,12 +450,18 @@ function applyTheme() {
 }
 
 // ---- Lista inteligente: qué comprar en cada super ----
-function agregar(id) {
+function agregar(id, btn) {
   state.lista.push(id);
   guardar();
   const o = state.idx.byId.get(id);
   toast(o ? `${o.producto.slice(0, 32)}… agregado ✅` : "Agregado ✅");
   renderBar();
+  if (btn) {
+    const t = btn.textContent;
+    btn.textContent = "✓";
+    btn.classList.add("added");
+    setTimeout(() => { btn.textContent = t; btn.classList.remove("added"); }, 900);
+  }
 }
 function quitar(id) {
   const i = state.lista.indexOf(id);
@@ -704,7 +710,7 @@ async function cargarCatalogo() {
   const total = archivos.length;
   const skele = () => {
     $("ofertas-lista").innerHTML = Array.from({ length: 6 }).map(() =>
-      `<div class="card-prod"><div class="emoji">⏳</div><div class="prod-body"><p class="prod-name">Cargando precios… ${hechos}/${total} supers</p></div></div>`).join("");
+      `<div class="card-prod" aria-hidden="true"><div class="emoji skel"></div><div class="prod-body"><p class="prod-name skel">&nbsp;</p><p class="prod-sub skel">&nbsp;</p></div></div>`).join("");
   };
   skele();
   const partes = await Promise.all(archivos.map(async (s) => {
