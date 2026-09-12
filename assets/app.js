@@ -22,7 +22,7 @@ const state = {
   idx: null, // { byKey: Map, byId: Map }
 };
 
-const APP_VERSION = "v4.5.0 · 2026-09-11";
+const APP_VERSION = "v4.6.0 · 2026-09-11";
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => "$" + Number(n).toLocaleString("es-AR");
