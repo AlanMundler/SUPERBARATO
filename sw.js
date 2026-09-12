@@ -1,7 +1,7 @@
 /* SUPERBARATO SW: red primero, caché solo si no hay internet.
    Los precios (/data/) jamás se cachean. */
-const CACHE = "superbarato-v5";
-const SHELL = ["./", "index.html", "assets/app.js?v=5", "assets/styles.css?v=5", "manifest.json"];
+const CACHE = "superbarato-v6";
+const SHELL = ["./", "index.html", "manifest.json"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

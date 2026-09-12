@@ -369,16 +369,23 @@ function checkAlertas() {
     }).join("") : "";
 }
 
-// ---- Cazaofertas: mayores rebajas en $ de hoy ----
+// ---- Cazaofertas: ahorro REAL vs precio promedio entre supers.
+// Nunca usa el % del super (suelen inflar la lista): la referencia honesta
+// es la mediana de lo que cobran los demás por lo mismo.
 function renderCaza() {
   const box = $("caza-lista");
   if (!box) return;
   const gs = grupos()
-    .map((g) => ({ g, off: g.items[0].precio_lista > g.items[0].precio ? g.items[0].precio_lista - g.items[0].precio : 0 }))
-    .filter((x) => x.off > 0)
+    .map((g) => {
+      const o = g.items[0];
+      const ref = o.ref_mediana || 0;
+      const off = ref > o.precio ? Math.round(ref - o.precio) : 0;
+      return { g, off };
+    })
+    .filter((x) => x.off > 1)
     .sort((a, b) => b.off - a.off)
     .slice(0, 60);
-  if (!gs.length) { box.innerHTML = '<p class="muted">Hoy no hay rebajas marcadas.</p>'; return; }
+  if (!gs.length) { box.innerHTML = '<p class="muted">Hoy no hay rebajas reales marcadas.</p>'; return; }
   box.innerHTML = "";
   for (const { g, off } of gs) {
     const mejor = g.items[0];
@@ -390,8 +397,9 @@ function renderCaza() {
       <div class="emoji" aria-hidden="true">${catIcono(g.categoria)}</div>
       <div class="prod-body">
         <p class="prod-name">${g.producto}</p>
-        <p class="prod-sub">${g.marca} · ahorrás ${fmt(off)}</p>
+        <p class="prod-sub">${g.marca} · ahorrás ${fmt(off)} vs promedio</p>
         <span class="badge" style="background:${s.color}">${s.nombre}</span>
+        ${mejor.inflado ? `<span class="tag-inflado">⚠️ lista inflada</span>` : ""}
       </div>
       <div class="prod-side">
         <span class="precio">${fmt(mejor.precio)}</span>
@@ -726,6 +734,8 @@ async function cargarCatalogo() {
         promo: !!o.promo, suc: o.suc || 1,
         url_producto: o.url_producto || "", url_tienda: o.url_tienda || "",
         ppu: o.ppu || null, punidad: o.punidad || "",
+        ref_mediana: o.ref_mediana || null, ref_min: o.ref_min || null,
+        dto_honesto: o.dto_honesto || 0, inflado: !!o.inflado,
       }));
     } catch (e) {
       hechos++;

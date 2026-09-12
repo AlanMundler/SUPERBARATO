@@ -117,13 +117,13 @@ main.wrap { padding-bottom: 12px; }
 .results-meta { font-size: 0.8rem; color: var(--muted); margin: 6px 0; flex-shrink: 0; }
 .orden-row { display: flex; gap: 6px; margin-bottom: 6px; flex-shrink: 0; }
 .chip.sm { min-height: 32px; font-size: 0.78rem; }
-.ppu { font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-.tachado { font-size: 0.78rem; color: var(--muted); text-decoration: line-through; font-variant-numeric: tabular-nums; }
-.cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.ppu { font-size: 0.66rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tachado { font-size: 0.7rem; color: var(--muted); text-decoration: line-through; font-variant-numeric: tabular-nums; }
+.cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
 @media (min-width: 700px) { .cards { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 .card-prod {
   background: var(--card); border: 2px solid var(--line); border-radius: var(--card-radius);
-  padding: 10px; display: flex; gap: 8px; cursor: pointer; min-width: 0;
+  padding: 8px; display: flex; gap: 6px; cursor: pointer; min-width: 0;
   box-shadow: var(--shadow-1);
   content-visibility: auto; contain-intrinsic-size: auto 110px;
   animation: card-in 0.35s ease both;
@@ -137,25 +137,26 @@ main.wrap { padding-bottom: 12px; }
   to { opacity: 1; transform: none; }
 }
 .emoji {
-  font-size: 1.8rem; line-height: 1; background: var(--paper); border-radius: 12px;
-  width: 52px; height: 52px; flex: 0 0 52px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; line-height: 1; background: var(--paper); border-radius: 10px;
+  width: 38px; height: 38px; flex: 0 0 38px; display: flex; align-items: center; justify-content: center;
 }
 .prod-body { flex: 1; min-width: 0; }
-.prod-name { font-weight: 700; margin: 0; font-size: 0.98rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.prod-sub { margin: 2px 0 6px; font-size: 0.8rem; color: var(--muted); }
-.badge { display: inline-block; font-size: 0.72rem; font-weight: 700; border-radius: 999px; padding: 3px 10px; margin: 0 6px 4px 0; color: #fff; background: var(--muted); }
-.prod-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
-.precio { font-weight: 800; font-size: 1.25rem; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.prod-name { font-weight: 700; margin: 0; font-size: 0.85rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.prod-sub { margin: 1px 0 3px; font-size: 0.68rem; color: var(--muted); }
+.badge { display: inline-block; font-size: 0.62rem; font-weight: 700; border-radius: 999px; padding: 2px 7px; margin: 0 6px 2px 0; color: #fff; background: var(--muted); }
+.prod-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.tag-inflado { display: inline-block; font-size: 0.62rem; font-weight: 700; border-radius: 999px; padding: 2px 7px; background: #fde8e8; color: var(--danger); }
+.precio { font-weight: 800; font-size: 1.08rem; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .btn-add {
-  min-width: 48px; min-height: 42px; font-size: 1.2rem; font-weight: 800; border-radius: 12px;
-  border: 2px solid var(--acc); background: var(--acc); color: var(--acc-ink); cursor: pointer; padding: 2px 10px;
+  min-width: 44px; min-height: 38px; font-size: 1.1rem; font-weight: 800; border-radius: 10px;
+  border: 2px solid var(--acc); background: var(--acc); color: var(--acc-ink); cursor: pointer; padding: 2px 8px;
   transition: transform 0.12s ease, background 0.2s ease;
 }
 .btn-add:active { transform: scale(0.94); }
 .btn-add.added { background: var(--acc-soft); }
 .link-btn {
-  font-size: 0.75rem; font-weight: 500; color: var(--link); text-decoration: none;
-  border: 2px solid var(--line); border-radius: 8px; padding: 4px 8px; background: var(--card);
+  font-size: 0.7rem; font-weight: 500; color: var(--link); text-decoration: none;
+  border: 2px solid var(--line); border-radius: 8px; padding: 3px 7px; background: var(--card);
   display: inline-flex; align-items: center; min-height: 34px;
 }
 /* Shelf horizontal estilo góndola para "lo mejor de cada super" */
@@ -262,8 +263,8 @@ main.wrap { padding-bottom: 12px; }
 .fila-canasta .comp-dif { margin-left: auto; }
 .btn-del { min-width: 40px; min-height: 40px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); font-size: 1rem; cursor: pointer; flex-shrink: 0; }
 .btn-fav {
-  min-width: 40px; min-height: 40px; border-radius: 12px; border: 2px solid var(--line);
-  background: var(--card); font-size: 1rem; cursor: pointer; flex-shrink: 0; filter: grayscale(1); opacity: 0.6;
+  min-width: 36px; min-height: 36px; border-radius: 10px; border: 2px solid var(--line);
+  background: var(--card); font-size: 0.9rem; cursor: pointer; flex-shrink: 0; filter: grayscale(1); opacity: 0.6;
 }
 .btn-fav.on { filter: none; opacity: 1; border-color: var(--sun, #fbbf24); }
 .ajuste-row { margin: 8px 0; }
@@ -767,16 +768,23 @@ function checkAlertas() {
     }).join("") : "";
 }
 
-// ---- Cazaofertas: mayores rebajas en $ de hoy ----
+// ---- Cazaofertas: ahorro REAL vs precio promedio entre supers.
+// Nunca usa el % del super (suelen inflar la lista): la referencia honesta
+// es la mediana de lo que cobran los demás por lo mismo.
 function renderCaza() {
   const box = $("caza-lista");
   if (!box) return;
   const gs = grupos()
-    .map((g) => ({ g, off: g.items[0].precio_lista > g.items[0].precio ? g.items[0].precio_lista - g.items[0].precio : 0 }))
-    .filter((x) => x.off > 0)
+    .map((g) => {
+      const o = g.items[0];
+      const ref = o.ref_mediana || 0;
+      const off = ref > o.precio ? Math.round(ref - o.precio) : 0;
+      return { g, off };
+    })
+    .filter((x) => x.off > 1)
     .sort((a, b) => b.off - a.off)
     .slice(0, 60);
-  if (!gs.length) { box.innerHTML = '<p class="muted">Hoy no hay rebajas marcadas.</p>'; return; }
+  if (!gs.length) { box.innerHTML = '<p class="muted">Hoy no hay rebajas reales marcadas.</p>'; return; }
   box.innerHTML = "";
   for (const { g, off } of gs) {
     const mejor = g.items[0];
@@ -788,8 +796,9 @@ function renderCaza() {
       <div class="emoji" aria-hidden="true">${catIcono(g.categoria)}</div>
       <div class="prod-body">
         <p class="prod-name">${g.producto}</p>
-        <p class="prod-sub">${g.marca} · ahorrás ${fmt(off)}</p>
+        <p class="prod-sub">${g.marca} · ahorrás ${fmt(off)} vs promedio</p>
         <span class="badge" style="background:${s.color}">${s.nombre}</span>
+        ${mejor.inflado ? `<span class="tag-inflado">⚠️ lista inflada</span>` : ""}
       </div>
       <div class="prod-side">
         <span class="precio">${fmt(mejor.precio)}</span>
@@ -1124,6 +1133,8 @@ async function cargarCatalogo() {
         promo: !!o.promo, suc: o.suc || 1,
         url_producto: o.url_producto || "", url_tienda: o.url_tienda || "",
         ppu: o.ppu || null, punidad: o.punidad || "",
+        ref_mediana: o.ref_mediana || null, ref_min: o.ref_min || null,
+        dto_honesto: o.dto_honesto || 0, inflado: !!o.inflado,
       }));
     } catch (e) {
       hechos++;

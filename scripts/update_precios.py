@@ -971,6 +971,58 @@ def correr_sheet():
              "fuente": "sheet", "stale": False}]
 
 
+def referencias_por_ean(archivos):
+    """{ean: [precios]} de todos los items. Misma EAN = mismo producto,
+    sin importar el super: la mediana entre supers es el precio real."""
+    mapa = defaultdict(list)
+    for sid, items in archivos.items():
+        for o in items:
+            ean = str(o.get("ean") or "").strip()
+            pr = o.get("precio")
+            if ean and isinstance(pr, (int, float)) and pr > 0:
+                mapa[ean].append(float(pr))
+    return mapa
+
+
+def enriquecer_items(items, mapa):
+    """Agrega ref_mediana/ref_min/dto_honesto/inflado a cada item.
+    dto_honesto = ahorro real vs mediana (0 si está sobre la mediana).
+    inflado = precio de lista mayor al doble de la mediana (verso)."""
+    for o in items:
+        precios = sorted(mapa.get(str(o.get("ean") or ""), []))
+        if len(precios) < 2:
+            o["ref_mediana"], o["ref_min"] = None, None
+            o["dto_honesto"], o["inflado"] = 0, False
+            continue
+        mid = len(precios) // 2
+        med = precios[mid] if len(precios) % 2 else (precios[mid - 1] + precios[mid]) / 2
+        o["ref_mediana"] = round(med, 2)
+        o["ref_min"] = round(precios[0], 2)
+        o["dto_honesto"] = round(max(0.0, (med - o["precio"]) / med), 4) if med > 0 else 0
+        lista = o.get("precio_lista") or 0
+        o["inflado"] = bool(med > 0 and lista > 2 * med)
+    return items
+
+
+def enriquecer_referencias():
+    """Segunda pasada sobre data/catalogo: referencia cruzada por EAN."""
+    datos = {}
+    for f in sorted(CATALOGO.glob("*.json")):
+        if f.name == "index.json":
+            continue
+        try:
+            datos[f.stem] = json.loads(f.read_text(encoding="utf-8"))
+        except Exception as e:
+            print(f"[ref] {f.name}: {e}", flush=True)
+    mapa = referencias_por_ean({k: v.get("items", []) for k, v in datos.items()})
+    n = 0
+    for sid, d in datos.items():
+        enriquecer_items(d.get("items", []), mapa)
+        (CATALOGO / f"{sid}.json").write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+        n += len(d.get("items", []))
+    print(f"[ref] {n} items con referencia honesta", flush=True)
+
+
 # ---------------------------------------------------------------- main
 def escribir_super(sid, nombre, items, fuente, fecha, cobertura, sucursales=0,
                    zona="Córdoba Capital", filtro=None):
@@ -1117,6 +1169,12 @@ def main():
                                 "sucursales": 0, "cobertura": "parcial",
                                 "fuente": "scrape", "stale": True})
 
+    # Referencia honesta cruzada (mediana por EAN) antes del índice.
+    try:
+        enriquecer_referencias()
+    except Exception as e:
+        print(f"[ref] FALLO: {e} (se publica sin referencias)", flush=True)
+
     # index.json = lo que el frontend muestra (SOLO lo que existe en disco)
     supers = []
     total = 0
@@ -1233,6 +1291,19 @@ def selftest():
     fallos_ppu = [(t, ppu_desde_nombre(p, t), esp) for t, p, esp in casos_ppu
                   if ppu_desde_nombre(p, t) != esp]
     assert not fallos_ppu, f"ppu mal: {fallos_ppu}"
+    # Arrange: referencia honesta entre supers (detectar listas infladas).
+    det = {"a": [{"ean": "1", "precio": 100, "precio_lista": 500},
+                 {"ean": "2", "precio": 200, "precio_lista": 200}],
+           "b": [{"ean": "1", "precio": 110, "precio_lista": 110}]}
+    mapa = referencias_por_ean(det)
+    assert sorted(mapa["1"]) == [100.0, 110.0]
+    enriquecer_items(det["a"], mapa)
+    enriquecer_items(det["b"], mapa)
+    assert det["a"][0]["ref_mediana"] == 105.0
+    assert det["a"][0]["dto_honesto"] > 0
+    assert det["a"][0]["inflado"] is True
+    assert det["a"][1]["dto_honesto"] == 0 and det["a"][1]["inflado"] is False
+    assert det["b"][0]["ref_min"] == 100.0
 
     com = ("id_comercio|id_bandera|bandera_descripcion\n"
            "9|1|Vea\n9|2|Disco\n")
