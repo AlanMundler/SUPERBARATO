@@ -1,8 +1,8 @@
 {
- "actualizado": "2026-09-12",
+ "actualizado": "2026-09-13",
  "zona": "Córdoba Capital (exclusivo)",
  "fuente": "sepa+vtex+scrape",
- "total_items": 15207,
+ "total_items": 12165,
  "total_supers": 8,
  "nota": "Precios de sucursales de Córdoba Capital (SEPA) + cadenas cordobesas. Nada fuera de la capital.",
  "supers": [
@@ -14,7 +14,7 @@
    "cobertura": "parcial (folleto)",
    "fuente": "pdf",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-09-12",
+   "actualizado": "2026-09-13",
    "stale": false
   },
   {
@@ -25,40 +25,40 @@
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-09-12",
+   "actualizado": "2026-09-13",
    "stale": false
   },
   {
    "id": "cordiez",
    "nombre": "Cordiez",
-   "items": 2548,
+   "items": 300,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-09-12",
+   "actualizado": "2026-09-13",
    "stale": false
   },
   {
    "id": "disco",
    "nombre": "Disco",
-   "items": 2000,
+   "items": 2546,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-09-12",
+   "actualizado": "2026-09-13",
    "stale": false
   },
   {
    "id": "jumbo",
    "nombre": "Jumbo",
-   "items": 2540,
+   "items": 1200,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-09-12",
+   "actualizado": "2026-09-13",
    "stale": false
   },
   {
@@ -69,7 +69,7 @@
    "cobertura": "parcial (mayorista)",
    "fuente": "sheet",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-09-12",
+   "actualizado": "2026-09-13",
    "stale": false
   },
   {
@@ -80,7 +80,7 @@
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-09-12",
+   "actualizado": "2026-09-13",
    "stale": false
   },
   {
@@ -91,7 +91,7 @@
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-09-12",
+   "actualizado": "2026-09-13",
    "stale": false
   }
  ]
