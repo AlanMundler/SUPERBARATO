@@ -1,8 +1,8 @@
 {
- "actualizado": "2026-10-15",
+ "actualizado": "2026-10-16",
  "zona": "Córdoba Capital (exclusivo)",
  "fuente": "sepa+vtex+scrape",
- "total_items": 15743,
+ "total_items": 14555,
  "total_supers": 8,
  "nota": "Precios de sucursales de Córdoba Capital (SEPA) + cadenas cordobesas. Nada fuera de la capital.",
  "supers": [
@@ -14,18 +14,18 @@
    "cobertura": "parcial (folleto)",
    "fuente": "pdf",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-10-15",
+   "actualizado": "2026-10-16",
    "stale": false
   },
   {
    "id": "carrefour",
    "nombre": "Carrefour Online",
-   "items": 2539,
+   "items": 2549,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-10-15",
+   "actualizado": "2026-10-16",
    "stale": false
   },
   {
@@ -36,18 +36,18 @@
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-10-15",
+   "actualizado": "2026-10-16",
    "stale": false
   },
   {
    "id": "disco",
    "nombre": "Disco",
-   "items": 2545,
+   "items": 2408,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-10-15",
+   "actualizado": "2026-10-16",
    "stale": false
   },
   {
@@ -58,7 +58,7 @@
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-10-15",
+   "actualizado": "2026-10-16",
    "stale": false
   },
   {
@@ -69,29 +69,29 @@
    "cobertura": "parcial (mayorista)",
    "fuente": "sheet",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-10-15",
+   "actualizado": "2026-10-16",
    "stale": false
   },
   {
    "id": "mas",
    "nombre": "ChangoMas",
-   "items": 2547,
+   "items": 1490,
    "sucursales": 0,
-   "cobertura": "parcial (tope API)",
+   "cobertura": "completa",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-10-15",
+   "actualizado": "2026-10-16",
    "stale": false
   },
   {
    "id": "vea",
    "nombre": "Vea",
-   "items": 2548,
+   "items": 2544,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-10-15",
+   "actualizado": "2026-10-16",
    "stale": false
   }
  ]
