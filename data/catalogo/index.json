@@ -1,8 +1,8 @@
 {
- "actualizado": "2026-10-17",
+ "actualizado": "2026-10-18",
  "zona": "Córdoba Capital (exclusivo)",
  "fuente": "sepa+vtex+scrape",
- "total_items": 15702,
+ "total_items": 15449,
  "total_supers": 8,
  "nota": "Precios de sucursales de Córdoba Capital (SEPA) + cadenas cordobesas. Nada fuera de la capital.",
  "supers": [
@@ -14,73 +14,73 @@
    "cobertura": "parcial (folleto)",
    "fuente": "pdf",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-10-17",
+   "actualizado": "2026-10-18",
    "stale": false
   },
   {
    "id": "carrefour",
    "nombre": "Carrefour Online",
-   "items": 2497,
+   "items": 2545,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-10-17",
+   "actualizado": "2026-10-18",
    "stale": false
   },
   {
    "id": "cordiez",
    "nombre": "Cordiez",
-   "items": 2550,
+   "items": 2250,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-10-17",
+   "actualizado": "2026-10-18",
    "stale": false
   },
   {
    "id": "disco",
    "nombre": "Disco",
-   "items": 2550,
+   "items": 2542,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-10-17",
+   "actualizado": "2026-10-18",
    "stale": false
   },
   {
    "id": "jumbo",
    "nombre": "Jumbo",
-   "items": 2549,
+   "items": 2545,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-10-17",
+   "actualizado": "2026-10-18",
    "stale": false
   },
   {
    "id": "la-distri",
    "nombre": "La Distri",
-   "items": 365,
+   "items": 366,
    "sucursales": 0,
    "cobertura": "parcial (mayorista)",
    "fuente": "sheet",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-10-17",
+   "actualizado": "2026-10-18",
    "stale": false
   },
   {
    "id": "mas",
    "nombre": "ChangoMas",
-   "items": 2540,
+   "items": 2550,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-10-17",
+   "actualizado": "2026-10-18",
    "stale": false
   },
   {
@@ -91,7 +91,7 @@
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-10-17",
+   "actualizado": "2026-10-18",
    "stale": false
   }
  ]
