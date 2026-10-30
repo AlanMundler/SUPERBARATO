@@ -1,8 +1,8 @@
 {
- "actualizado": "2026-10-29",
+ "actualizado": "2026-10-30",
  "zona": "Córdoba Capital (exclusivo)",
  "fuente": "sepa+vtex+scrape",
- "total_items": 6338,
+ "total_items": 6334,
  "total_supers": 12,
  "nota": "Precios de sucursales de Córdoba Capital (SEPA) + cadenas cordobesas. Nada fuera de la capital.",
  "supers": [
@@ -14,7 +14,7 @@
    "cobertura": "parcial (folleto)",
    "fuente": "pdf",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-10-29",
+   "actualizado": "2026-10-30",
    "stale": false
   },
   {
@@ -25,7 +25,7 @@
    "cobertura": "completa",
    "fuente": "sepa",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-10-29",
+   "actualizado": "2026-10-30",
    "stale": false
   },
   {
@@ -36,18 +36,18 @@
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-10-29",
+   "actualizado": "2026-10-30",
    "stale": false
   },
   {
    "id": "cordiez",
    "nombre": "Cordiez",
-   "items": 2550,
+   "items": 750,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-10-29",
+   "actualizado": "2026-10-30",
    "stale": false
   },
   {
@@ -58,7 +58,7 @@
    "cobertura": "completa",
    "fuente": "sepa",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-10-29",
+   "actualizado": "2026-10-30",
    "stale": false
   },
   {
@@ -69,7 +69,7 @@
    "cobertura": "completa",
    "fuente": "sepa",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-10-29",
+   "actualizado": "2026-10-30",
    "stale": false
   },
   {
@@ -80,29 +80,29 @@
    "cobertura": "completa",
    "fuente": "sepa",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-10-29",
+   "actualizado": "2026-10-30",
    "stale": false
   },
   {
    "id": "la-distri",
    "nombre": "La Distri",
-   "items": 372,
+   "items": 371,
    "sucursales": 0,
    "cobertura": "parcial (mayorista)",
    "fuente": "sheet",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-10-29",
+   "actualizado": "2026-10-30",
    "stale": false
   },
   {
    "id": "mas",
    "nombre": "ChangoMas",
-   "items": 749,
+   "items": 2546,
    "sucursales": 0,
-   "cobertura": "completa",
+   "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-10-29",
+   "actualizado": "2026-10-30",
    "stale": false
   },
   {
@@ -113,7 +113,7 @@
    "cobertura": "completa",
    "fuente": "sepa",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-10-29",
+   "actualizado": "2026-10-30",
    "stale": false
   },
   {
@@ -125,7 +125,7 @@
    "fuente": "sepa",
    "zona": "Córdoba Capital",
    "actualizado": "2026-10-29",
-   "stale": false
+   "stale": true
   },
   {
    "id": "vea",
@@ -135,7 +135,7 @@
    "cobertura": "completa",
    "fuente": "sepa",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-10-29",
+   "actualizado": "2026-10-30",
    "stale": false
   }
  ]
