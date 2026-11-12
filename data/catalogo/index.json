@@ -1,20 +1,20 @@
 {
- "actualizado": "2026-11-11",
+ "actualizado": "2026-11-12",
  "zona": "Córdoba Capital (exclusivo)",
  "fuente": "sepa+vtex+scrape",
- "total_items": 15421,
+ "total_items": 15727,
  "total_supers": 13,
  "nota": "Precios de sucursales de Córdoba Capital (SEPA) + cadenas cordobesas. Nada fuera de la capital.",
  "supers": [
   {
    "id": "almacor",
    "nombre": "Almacor",
-   "items": 106,
+   "items": 93,
    "sucursales": 0,
    "cobertura": "parcial (folleto)",
    "fuente": "pdf",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-11-11",
+   "actualizado": "2026-11-12",
    "stale": false
   },
   {
@@ -25,18 +25,18 @@
    "cobertura": "completa",
    "fuente": "sepa",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-11-11",
+   "actualizado": "2026-11-12",
    "stale": false
   },
   {
    "id": "carrefour",
    "nombre": "Carrefour Online",
-   "items": 2549,
+   "items": 2544,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-11-11",
+   "actualizado": "2026-11-12",
    "stale": false
   },
   {
@@ -47,7 +47,7 @@
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-11-11",
+   "actualizado": "2026-11-12",
    "stale": false
   },
   {
@@ -58,18 +58,18 @@
    "cobertura": "completa",
    "fuente": "sepa",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-11-11",
+   "actualizado": "2026-11-12",
    "stale": false
   },
   {
    "id": "disco",
    "nombre": "Disco",
-   "items": 2549,
+   "items": 2514,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-11-11",
+   "actualizado": "2026-11-12",
    "stale": false
   },
   {
@@ -80,7 +80,7 @@
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-11-11",
+   "actualizado": "2026-11-12",
    "stale": false
   },
   {
@@ -91,18 +91,18 @@
    "cobertura": "parcial (mayorista)",
    "fuente": "sheet",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-11-11",
+   "actualizado": "2026-11-12",
    "stale": false
   },
   {
    "id": "mas",
    "nombre": "ChangoMas",
-   "items": 2191,
+   "items": 2550,
    "sucursales": 0,
-   "cobertura": "completa",
+   "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-11-11",
+   "actualizado": "2026-11-12",
    "stale": false
   },
   {
@@ -113,8 +113,8 @@
    "cobertura": "completa",
    "fuente": "sepa",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-11-10",
-   "stale": true
+   "actualizado": "2026-11-12",
+   "stale": false
   },
   {
    "id": "sepa-24-2",
@@ -124,8 +124,8 @@
    "cobertura": "completa",
    "fuente": "sepa",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-11-10",
-   "stale": true
+   "actualizado": "2026-11-12",
+   "stale": false
   },
   {
    "id": "sepa-8-1",
@@ -135,7 +135,7 @@
    "cobertura": "completa",
    "fuente": "sepa",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-11-11",
+   "actualizado": "2026-11-12",
    "stale": false
   },
   {
@@ -146,7 +146,7 @@
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-11-11",
+   "actualizado": "2026-11-12",
    "stale": false
   }
  ]
