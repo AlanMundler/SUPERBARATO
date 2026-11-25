@@ -1,8 +1,8 @@
 {
- "actualizado": "2026-11-24",
+ "actualizado": "2026-11-25",
  "zona": "Córdoba Capital (exclusivo)",
  "fuente": "sepa+vtex+scrape",
- "total_items": 14716,
+ "total_items": 15654,
  "total_supers": 13,
  "nota": "Precios de sucursales de Córdoba Capital (SEPA) + cadenas cordobesas. Nada fuera de la capital.",
  "supers": [
@@ -14,7 +14,7 @@
    "cobertura": "parcial (folleto)",
    "fuente": "pdf",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-11-24",
+   "actualizado": "2026-11-25",
    "stale": false
   },
   {
@@ -31,23 +31,23 @@
   {
    "id": "carrefour",
    "nombre": "Carrefour Online",
-   "items": 2546,
+   "items": 2549,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-11-24",
+   "actualizado": "2026-11-25",
    "stale": false
   },
   {
    "id": "cordiez",
    "nombre": "Cordiez",
-   "items": 1500,
+   "items": 2550,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-11-24",
+   "actualizado": "2026-11-25",
    "stale": false
   },
   {
@@ -64,12 +64,12 @@
   {
    "id": "disco",
    "nombre": "Disco",
-   "items": 2542,
+   "items": 2545,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-11-24",
+   "actualizado": "2026-11-25",
    "stale": false
   },
   {
@@ -80,7 +80,7 @@
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-11-24",
+   "actualizado": "2026-11-25",
    "stale": false
   },
   {
@@ -91,18 +91,18 @@
    "cobertura": "parcial (mayorista)",
    "fuente": "sheet",
    "zona": "Córdoba Capital",
-   "actualizado": "2026-11-24",
+   "actualizado": "2026-11-25",
    "stale": false
   },
   {
    "id": "mas",
    "nombre": "ChangoMas",
-   "items": 2550,
+   "items": 2432,
    "sucursales": 0,
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-11-24",
+   "actualizado": "2026-11-25",
    "stale": false
   },
   {
@@ -146,7 +146,7 @@
    "cobertura": "parcial (tope API)",
    "fuente": "vtex",
    "zona": "Online (entrega en Córdoba Capital)",
-   "actualizado": "2026-11-24",
+   "actualizado": "2026-11-25",
    "stale": false
   }
  ]
